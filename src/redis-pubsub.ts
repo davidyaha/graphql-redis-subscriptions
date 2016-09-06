@@ -10,7 +10,7 @@ export interface PubSubRedisOptions {
 
 export class RedisPubSub implements PubSubEngine {
 
-  constructor(options: PubSubRedisOptions) {
+  constructor(options: PubSubRedisOptions = {}) {
     this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
     this.redisPublisher = new RedisClient(options.connection);
     this.redisSubscriber = new RedisClient(options.connection);
@@ -48,7 +48,7 @@ export class RedisPubSub implements PubSubEngine {
     } else {
       return new Promise<number>((resolve, reject) => {
         // TODO Support for pattern subs
-        this.redisSubscriber.subscribe(triggerName, (err, result) => {
+        this.redisSubscriber.subscribe(triggerName, err => {
           if (err) {
             reject(err);
           } else {

@@ -77,7 +77,7 @@ describe('SubscriptionManager', function() {
         };
       },
     },
-    pubsub: new RedisPubSub({}),
+    pubsub: new RedisPubSub(),
   });
   it('throws an error if query is not valid', function() {
     const query = 'query a{ testInt }';

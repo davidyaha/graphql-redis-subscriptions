@@ -79,6 +79,7 @@ describe('SubscriptionManager', function() {
     },
     pubsub: new RedisPubSub(),
   });
+
   it('throws an error if query is not valid', function() {
     const query = 'query a{ testInt }';
     const callback = () => null;
@@ -91,13 +92,6 @@ describe('SubscriptionManager', function() {
     const callback = () => null;
     return expect(subManager.subscribe({ query, operationName: 'X', callback }))
       .to.eventually.be.rejectedWith('Subscription query has validation errors');
-  });
-
-  it('requires operationName to be provided', function() {
-    const query = 'subscription { testSubscription }';
-    const callback = () => null;
-    return expect(subManager.subscribe({ query, operationName: undefined as string, callback }))
-      .to.eventually.be.rejectedWith('Must provide operationName');
   });
 
   it('can subscribe with a valid query and gets a subId back', function() {

@@ -52,7 +52,7 @@ export class RedisPubSub implements PubSubEngine {
           if (err) {
             reject(err);
           } else {
-            this.subsRefsMap[triggerName] = [id];
+            this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
             resolve(id);
           }
         });

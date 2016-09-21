@@ -100,6 +100,27 @@ describe('RedisPubSub', function () {
     });
   });
 
+  it('will subscribe to redis channel only once', function (done) {
+    const onMessage = () => null;
+    const subscriptionPromises = [
+      pubSub.subscribe('Posts', onMessage),
+      pubSub.subscribe('Posts', onMessage),
+    ];
+
+    Promise.all(subscriptionPromises).then(subIds => {
+      try {
+        expect(subIds.length).to.equals(2);
+        expect(subscribeSpy.callCount).to.equals(1);
+
+        pubSub.unsubscribe(subIds[0]);
+        pubSub.unsubscribe(subIds[1]);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
   it('can have multiple subscribers and all will be called when a message is published to this channel', function (done) {
     const onMessageSpy = spy(() => null);
     const subscriptionPromises = [

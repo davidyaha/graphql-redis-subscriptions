@@ -168,7 +168,7 @@ describe('Benchmark EE PubSub', function () {
     let mediumEventsPerSec = 30000;
     let largeEventsPerSec = 30000;
     let mutationsPerSec = 19700;
-    let fullQueriesPerSec = 16700;
+    let fullQueriesPerSec = 16600;
     let publishesCounter = 0;
     let subId;
 
@@ -459,7 +459,7 @@ describe('Benchmark Redis PubSub', function () {
     let mediumEventsPerSec = 5000;
     let largeEventsPerSec = 340;
     let mutationsPerSec = 9500;
-    let fullQueriesPerSec = 9000;
+    let fullQueriesPerSec = 8800;
     let publishesCounter = 0;
     let subId;
 

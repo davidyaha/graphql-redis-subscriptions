@@ -168,6 +168,7 @@ describe('Benchmark EE PubSub', function () {
     let mediumEventsPerSec = 30000;
     let largeEventsPerSec = 30000;
     let mutationsPerSec = 19700;
+    let fullQueriesPerSec = 16700;
     let publishesCounter = 0;
     let subId;
 
@@ -277,7 +278,7 @@ describe('Benchmark EE PubSub', function () {
       },
     };
 
-    it(`should be able to publish ${mutationsPerSec} mutation results under a second`, function (done) {
+    it(`should be able to publish ${mutationsPerSec} small query mutation results under a second`, function (done) {
       this.slow(1500);
       let start;
 
@@ -316,6 +317,58 @@ describe('Benchmark EE PubSub', function () {
         subId = id;
         start = Date.now();
         for (let i = 0; i < mutationsPerSec; i++) {
+          mutationResult['id'] = i + 1;
+          mutationResult['createdAt'] = Date.now();
+
+          subManager.publish('commentAdded', mutationResult);
+        }
+      }).catch(done);
+
+    });
+
+    it(`should be able to publish ${fullQueriesPerSec} full query mutation results under a second`, function (done) {
+      this.slow(1500);
+      let start;
+
+      publishesCounter = 0;
+      const query = `subscription X{ 
+        commentAdded {
+          id
+          createdAt
+          repoName
+          content
+          postedBy {
+            login
+            avatar_url
+            html_url
+          }
+        } 
+      }`;
+      const callback = (err, event) => {
+        if (err) {
+          done(err);
+        }
+
+        if (++publishesCounter === fullQueriesPerSec) {
+          try {
+            expect(Date.now() - start).to.below(1000);
+
+            const commentId = event.data.commentAdded.id;
+            expect(commentId).to.equals(String(fullQueriesPerSec));
+
+            subManager.unsubscribe(subId);
+
+            done();
+          } catch (e) {
+            done(e);
+          }
+        }
+      };
+
+      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
+        subId = id;
+        start = Date.now();
+        for (let i = 0; i < fullQueriesPerSec; i++) {
           mutationResult['id'] = i + 1;
           mutationResult['createdAt'] = Date.now();
 
@@ -406,6 +459,7 @@ describe('Benchmark Redis PubSub', function () {
     let mediumEventsPerSec = 5000;
     let largeEventsPerSec = 340;
     let mutationsPerSec = 9500;
+    let fullQueriesPerSec = 9000;
     let publishesCounter = 0;
     let subId;
 
@@ -515,7 +569,7 @@ describe('Benchmark Redis PubSub', function () {
       },
     };
 
-    it(`should be able to publish ${mutationsPerSec} mutation results under a second`, function (done) {
+    it(`should be able to publish ${mutationsPerSec} small query mutation results under a second`, function (done) {
       this.slow(1500);
       let start;
 
@@ -554,6 +608,58 @@ describe('Benchmark Redis PubSub', function () {
         subId = id;
         start = Date.now();
         for (let i = 0; i < mutationsPerSec; i++) {
+          mutationResult['id'] = i + 1;
+          mutationResult['createdAt'] = Date.now();
+
+          subManager.publish('commentAdded', mutationResult);
+        }
+      }).catch(done);
+
+    });
+
+    it(`should be able to publish ${fullQueriesPerSec} full query mutation results under a second`, function (done) {
+      this.slow(1500);
+      let start;
+
+      publishesCounter = 0;
+      const query = `subscription X{ 
+        commentAdded {
+          id
+          createdAt
+          content
+          repoName
+          postedBy {
+            login
+            avatar_url
+            html_url
+          }
+        } 
+      }`;
+      const callback = (err, event) => {
+        if (err) {
+          done(err);
+        }
+
+        if (++publishesCounter === fullQueriesPerSec) {
+          try {
+            expect(Date.now() - start).to.below(1000);
+
+            const commentId = event.data.commentAdded.id;
+            expect(commentId).to.equals(String(fullQueriesPerSec));
+
+            subManager.unsubscribe(subId);
+
+            done();
+          } catch (e) {
+            done(e);
+          }
+        }
+      };
+
+      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
+        subId = id;
+        start = Date.now();
+        for (let i = 0; i < fullQueriesPerSec; i++) {
           mutationResult['id'] = i + 1;
           mutationResult['createdAt'] = Date.now();
 

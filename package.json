@@ -21,7 +21,7 @@
   "homepage": "https://github.com/davidyaha/graphql-redis-subscriptions",
   "scripts": {
     "compile": "tsc",
-    "typings": "typings install",
+    "typings": "typings install && tsdm rewire",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
@@ -47,6 +47,7 @@
     "remap-istanbul": "^0.6.4",
     "retyped-simple-mock-tsd-ambient": "0.0.0-0",
     "simple-mock": "^0.7.0",
+    "tsdm": "0.1.0-3",
     "tslint": "^3.13.0",
     "typescript": "^2.0.0",
     "typings": "^1.3.2"

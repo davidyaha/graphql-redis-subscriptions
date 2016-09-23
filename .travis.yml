@@ -3,6 +3,11 @@ node_js:
   - "6"
   - "4"
 
+cache:
+  directories:
+    - node_modules
+    - typings
+
 install:
   - npm install
   - npm run typings

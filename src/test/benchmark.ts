@@ -1,6 +1,4 @@
 import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-
 import {
   GraphQLSchema,
   GraphQLObjectType,
@@ -13,7 +11,6 @@ import {
 import {SubscriptionManager, PubSub} from 'graphql-subscriptions';
 import {RedisPubSub} from '../redis-pubsub';
 
-chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const User = new GraphQLObjectType({
@@ -184,35 +181,11 @@ describe('Benchmark EE PubSub', function () {
     const smallQueriesPerSec = 19700;
     const mediumQueryPerSec = 16600;
     const fullQueryPerSec = 14600;
-    let publishesCounter = 0;
-    let subId;
 
     it(`should be able to publish ${smallEventsPerSec} small events under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = 'subscription X{ testSubscription2 }';
-      const callback = () => {
-        if (++publishesCounter === smallEventsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-            subManager.unsubscribe(subId);
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < smallEventsPerSec; i++) {
-          subManager.publish('testSubscription2', 'small event');
-        }
-      }).catch(done);
-
+      const payload = 'small event';
+      testEventsPerSecond.call(this, smallEventsPerSec, payload, subManager, query, done);
     });
 
     const mediumEventSize = 5000;
@@ -222,31 +195,8 @@ describe('Benchmark EE PubSub', function () {
     }
 
     it(`should be able to publish ${mediumEventsPerSec} medium events under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = 'subscription X{ testSubscription2 }';
-      const callback = () => {
-        if (++publishesCounter === mediumEventsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-            subManager.unsubscribe(subId);
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < mediumEventsPerSec; i++) {
-          subManager.publish('testSubscription2', mediumMessage);
-        }
-      }).catch(done);
-
+      testEventsPerSecond.call(this, mediumEventsPerSec, mediumMessage, subManager, query, done);
     });
 
     const largeEventSize = 50000;
@@ -256,31 +206,8 @@ describe('Benchmark EE PubSub', function () {
     }
 
     it(`should be able to publish ${largeEventsPerSec} large events under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = 'subscription X{ testSubscription2 }';
-      const callback = () => {
-        if (++publishesCounter === largeEventsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-            subManager.unsubscribe(subId);
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < largeEventsPerSec; i++) {
-          subManager.publish('testSubscription2', largeMessage);
-        }
-      }).catch(done);
-
+      testEventsPerSecond.call(this, largeEventsPerSec, largeMessage, subManager, query, done);
     });
 
     let mutationResult = {
@@ -298,54 +225,15 @@ describe('Benchmark EE PubSub', function () {
     };
 
     it(`should be able to publish ${mutationsPerSec} empty query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
         }
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === mutationsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(mutationsPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < mutationsPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, mutationsPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${smallQueriesPerSec} small query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
@@ -355,45 +243,10 @@ describe('Benchmark EE PubSub', function () {
           }
         } 
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === smallQueriesPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(smallQueriesPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < smallQueriesPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, smallQueriesPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${mediumQueryPerSec} medium query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
@@ -407,45 +260,10 @@ describe('Benchmark EE PubSub', function () {
           }
         } 
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === mediumQueryPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(mediumQueryPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < mediumQueryPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, mediumQueryPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${fullQueryPerSec} full query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
@@ -463,38 +281,7 @@ describe('Benchmark EE PubSub', function () {
           }
         } 
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === fullQueryPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(fullQueryPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < fullQueryPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, fullQueryPerSec, mutationResult, subManager, query, done);
     });
   });
 });
@@ -581,35 +368,11 @@ describe('Benchmark Redis PubSub', function () {
     const smallQueriesPerSec = 9500;
     const mediumQueryPerSec = 8700;
     const fullQueryPerSec = 7700;
-    let publishesCounter = 0;
-    let subId;
 
     it(`should be able to publish ${smallEventsPerSec} small events under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = 'subscription X{ testSubscription2 }';
-      const callback = () => {
-        if (++publishesCounter === smallEventsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-            subManager.unsubscribe(subId);
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < smallEventsPerSec; i++) {
-          subManager.publish('testSubscription2', 'small event');
-        }
-      }).catch(done);
-
+      const payload = 'small event';
+      testEventsPerSecond.call(this, smallEventsPerSec, payload, subManager, query, done);
     });
 
     const mediumEventSize = 5000;
@@ -619,31 +382,8 @@ describe('Benchmark Redis PubSub', function () {
     }
 
     it(`should be able to publish ${mediumEventsPerSec} medium events under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = 'subscription X{ testSubscription2 }';
-      const callback = () => {
-        if (++publishesCounter === mediumEventsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-            subManager.unsubscribe(subId);
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < mediumEventsPerSec; i++) {
-          subManager.publish('testSubscription2', mediumMessage);
-        }
-      }).catch(done);
-
+      testEventsPerSecond.call(this, mediumEventsPerSec, mediumMessage, subManager, query, done);
     });
 
     const largeEventSize = 50000;
@@ -653,31 +393,8 @@ describe('Benchmark Redis PubSub', function () {
     }
 
     it(`should be able to publish ${largeEventsPerSec} large events under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = 'subscription X{ testSubscription2 }';
-      const callback = () => {
-        if (++publishesCounter === largeEventsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-            subManager.unsubscribe(subId);
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < largeEventsPerSec; i++) {
-          subManager.publish('testSubscription2', largeMessage);
-        }
-      }).catch(done);
-
+      testEventsPerSecond.call(this, largeEventsPerSec, largeMessage, subManager, query, done);
     });
 
     let mutationResult = {
@@ -695,54 +412,15 @@ describe('Benchmark Redis PubSub', function () {
     };
 
     it(`should be able to publish ${mutationsPerSec} empty query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
         }
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === mutationsPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(mutationsPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < mutationsPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, mutationsPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${smallQueriesPerSec} small query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
@@ -752,45 +430,10 @@ describe('Benchmark Redis PubSub', function () {
           }
         } 
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === smallQueriesPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(smallQueriesPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < smallQueriesPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, smallQueriesPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${mediumQueryPerSec} medium query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
@@ -804,45 +447,10 @@ describe('Benchmark Redis PubSub', function () {
           }
         } 
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === mediumQueryPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(mediumQueryPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < mediumQueryPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, mediumQueryPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${fullQueryPerSec} full query mutation results under a second`, function (done) {
-      this.slow(1500);
-      let start;
-
-      publishesCounter = 0;
       const query = `subscription X{ 
         commentAdded {
           id
@@ -860,38 +468,74 @@ describe('Benchmark Redis PubSub', function () {
           }
         } 
       }`;
-      const callback = (err, event) => {
-        if (err) {
-          done(err);
-        }
-
-        if (++publishesCounter === fullQueryPerSec) {
-          try {
-            expect(Date.now() - start).to.below(1000);
-
-            const commentId = event.data.commentAdded.id;
-            expect(commentId).to.equals(String(fullQueryPerSec));
-
-            subManager.unsubscribe(subId);
-
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }
-      };
-
-      subManager.subscribe({query, operationName: 'X', callback}).then(id => {
-        subId = id;
-        start = Date.now();
-        for (let i = 0; i < fullQueryPerSec; i++) {
-          mutationResult['id'] = i + 1;
-          mutationResult['createdAt'] = Date.now();
-
-          subManager.publish('commentAdded', mutationResult);
-        }
-      }).catch(done);
-
+      testMutationsPerSecond.call(this, fullQueryPerSec, mutationResult, subManager, query, done);
     });
   });
 });
+
+function testEventsPerSecond(eventsPerSec: number, eventPayload: any, subManager: SubscriptionManager, query: string, done) {
+  this.slow(1500);
+  let start;
+
+  let publishesCounter = 0;
+  let subId;
+
+  const callback = () => {
+    if (++publishesCounter === eventsPerSec) {
+      try {
+        expect(Date.now() - start).to.below(1000);
+        subManager.unsubscribe(subId);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    }
+  };
+
+  subManager.subscribe({query, operationName: 'X', callback}).then(id => {
+    subId = id;
+    start = Date.now();
+    for (let i = 0; i < eventsPerSec; i++) {
+      subManager.publish('testSubscription2', eventPayload);
+    }
+  }).catch(done);
+};
+
+function testMutationsPerSecond(mutationsPerSec: number, mutationPayload: any, subManager: SubscriptionManager, query: string, done) {
+  this.slow(1500);
+  let start;
+
+  let publishesCounter = 0;
+  let subId;
+  const callback = (err, event) => {
+    if (err) {
+      done(err);
+    }
+
+    if (++publishesCounter === mutationsPerSec) {
+      try {
+        expect(Date.now() - start).to.below(1000);
+
+        const commentId = event.data.commentAdded.id;
+        expect(commentId).to.equals(String(mutationsPerSec));
+
+        subManager.unsubscribe(subId);
+
+        done();
+      } catch (e) {
+        done(e);
+      }
+    }
+  };
+
+  subManager.subscribe({query, operationName: 'X', callback}).then(id => {
+    subId = id;
+    start = Date.now();
+    for (let i = 0; i < mutationsPerSec; i++) {
+      mutationPayload['id'] = i + 1;
+      mutationPayload['createdAt'] = Date.now();
+
+      subManager.publish('commentAdded', mutationPayload);
+    }
+  }).catch(done);
+};

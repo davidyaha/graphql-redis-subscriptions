@@ -5,13 +5,13 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLID,
 } from 'graphql';
 
 import {SubscriptionManager, PubSub} from 'graphql-subscriptions';
 import {RedisPubSub} from '../redis-pubsub';
-import {GraphQLFloat} from 'graphql';
-import {GraphQLID} from 'graphql';
-import {GraphQLInt} from "graphql";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -33,7 +33,7 @@ const User = new GraphQLObjectType({
     },
     last_visit: {
       type: GraphQLFloat,
-    }
+    },
   },
 });
 

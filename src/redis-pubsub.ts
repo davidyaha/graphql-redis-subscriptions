@@ -4,7 +4,7 @@ import {each} from 'async';
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
-  triggerTransform?: (trigger: string) => string;
+  triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
 }
 
@@ -31,11 +31,11 @@ export class RedisPubSub implements PubSubEngine {
 
   public publish(trigger: string, payload: any): boolean {
     // TODO PR graphql-subscriptions to use promises as return value
-    return this.redisPublisher.publish(this.triggerTransform(trigger), JSON.stringify(payload));
+    return this.redisPublisher.publish(trigger, JSON.stringify(payload));
   }
 
-  public subscribe(trigger: string, onMessage: Function): Promise<number> {
-    const triggerName: string = this.triggerTransform(trigger);
+  public subscribe(trigger: string, onMessage: Function, options?: Object): Promise<number> {
+    const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
 
@@ -104,7 +104,7 @@ export class RedisPubSub implements PubSubEngine {
     })
   }
 
-  private triggerTransform: (trigger: Trigger) => string;
+  private triggerTransform: TriggerTransform;
   private redisSubscriber: RedisClient;
   private redisPublisher: RedisClient;
 
@@ -113,5 +113,6 @@ export class RedisPubSub implements PubSubEngine {
   private currentSubscriptionId: number;
 }
 
-type Path = Array<string | number>;
-type Trigger = string | Path;
+export type Path = Array<string | number>;
+export type Trigger = string | Path;
+export type TriggerTransform = (trigger: Trigger, channelOptions?: Object) => string;

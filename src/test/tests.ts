@@ -171,11 +171,26 @@ describe('RedisPubSub', function () {
       .to.throw('There is no subscription of id "123"');
   });
 
-  it('can use transform function to convert array of identifiers into a channel', function () {
-    // const pathToTrigger = (path) => path.join('.');
+  it('can use transform function to convert the trigger name given into more explicit channel name', function (done) {
+    const triggerTransform = (trigger, {repoName}) => `${trigger}.${repoName}`;
+    const pubsub = new RedisPubSub({
+      triggerTransform,
+    });
 
-    // TODO There is no way of using that without PR to graphql-subscriptions to accept more than just string on subscribe
-    // and publish. It should be
+    const validateMessage = message => {
+      try {
+        expect(message).to.equals('test');
+        done();
+      } catch (e) {
+        done(e);
+      }
+    };
+
+    pubsub.subscribe('comments', validateMessage, {repoName: 'graphql-redis-subscriptions'}).then(subId => {
+      pubsub.publish('comments.graphql-redis-subscriptions', 'test');
+      pubsub.unsubscribe(subId);
+    });
+
   });
 
   // TODO pattern subs

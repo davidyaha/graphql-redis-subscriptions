@@ -57,6 +57,15 @@ const schema = new GraphQLSchema({
           b: { type: GraphQLInt },
         },
       },
+      testChannelOptions: {
+        type: GraphQLString,
+        resolve: function (root) {
+          return root;
+        },
+        args: {
+          repoName: {type: GraphQLString},
+        },
+      },
     },
   }),
 });
@@ -67,13 +76,13 @@ describe('SubscriptionManager', function() {
     setupFunctions: {
       'testFilter': (options, { filterBoolean }) => {
         return {
-          'Filter1': (root) => root.filterBoolean === filterBoolean,
+          'Filter1': {filter: (root) => root.filterBoolean === filterBoolean},
         };
       },
       'testFilterMulti': (options) => {
         return {
-          'Trigger1': () => true,
-          'Trigger2': () => true,
+          'Trigger1': {filter: () => true},
+          'Trigger2': {filter: () => true},
         };
       },
     },
@@ -231,5 +240,48 @@ describe('SubscriptionManager', function() {
         subManager.unsubscribe(subId);
       }, 4);
     });
+  });
+
+  it('can use transform function to convert the trigger name given into more explicit channel name', function (done) {
+    const triggerTransform = (trigger, {path}) => [trigger, ...path].join('.');
+    const pubsub = new RedisPubSub({
+      triggerTransform,
+    });
+
+    const subManager2 = new SubscriptionManager({
+      schema,
+      setupFunctions: {
+        testChannelOptions: (options, {repoName}) => ({
+          comments: {
+            channelOptions: {path: [repoName]},
+          },
+        }),
+      },
+      pubsub,
+    });
+
+    const callback = (err, payload) => {
+      try {
+        expect(payload.data.testChannelOptions).to.equals('test');
+        done();
+      } catch (e) {
+        done(e);
+      }
+    };
+
+    const query = `
+      subscription X($repoName: String!) {
+        testChannelOptions(repoName: $repoName)
+      }
+    `;
+
+    const variables = {repoName: 'graphql-redis-subscriptions'};
+
+    subManager2.subscribe({query, operationName: 'X', variables, callback}).then(subId => {
+      pubsub.publish('comments.graphql-redis-subscriptions', 'test');
+
+      setTimeout(() => pubsub.unsubscribe(subId), 4);
+    });
+
   });
 });

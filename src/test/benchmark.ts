@@ -102,19 +102,7 @@ const schema = new GraphQLSchema({
 describe('Benchmark EE PubSub', function () {
   const subManager = new SubscriptionManager({
     schema,
-    setupFunctions: {
-      'testFilter': (options, {filterBoolean}) => {
-        return {
-          'Filter1': (root) => root.filterBoolean === filterBoolean,
-        };
-      },
-      'testFilterMulti': (options) => {
-        return {
-          'Trigger1': () => true,
-          'Trigger2': () => true,
-        };
-      },
-    },
+    setupFunctions: {},
     pubsub: new PubSub(),
   });
 
@@ -289,19 +277,7 @@ describe('Benchmark EE PubSub', function () {
 describe('Benchmark Redis PubSub', function () {
   const subManager = new SubscriptionManager({
     schema,
-    setupFunctions: {
-      'testFilter': (options, {filterBoolean}) => {
-        return {
-          'Filter1': (root) => root.filterBoolean === filterBoolean,
-        };
-      },
-      'testFilterMulti': (options) => {
-        return {
-          'Trigger1': () => true,
-          'Trigger2': () => true,
-        };
-      },
-    },
+    setupFunctions: {},
     pubsub: new RedisPubSub(),
   });
 

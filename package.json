@@ -44,7 +44,7 @@
     "graphql": "^0.7.0",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^3.0.0",
-    "remap-istanbul": "^0.6.4",
+    "remap-istanbul": "^0.7.0",
     "retyped-simple-mock-tsd-ambient": "0.0.0-0",
     "simple-mock": "^0.7.0",
     "tsdm": "0.1.0-3",

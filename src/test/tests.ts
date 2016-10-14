@@ -55,12 +55,13 @@ describe('RedisPubSub', function () {
   it('can unsubscribe from specific redis channel', function (done) {
 
     pubSub.subscribe('Posts', () => null).then(subId => {
-      pubSub.unsubscribe(subId);
-
       try {
+        expect((pubSub as any).subscriptionMap[subId]).not.to.be.an('undefined');
+        pubSub.unsubscribe(subId);
         expect(unsubscribeSpy.callCount).to.equals(1);
         const call = unsubscribeSpy.lastCall;
         expect(call.args).to.have.members(['Posts']);
+        expect((pubSub as any).subscriptionMap[subId]).to.be.an('undefined');
         done();
 
       } catch (e) {

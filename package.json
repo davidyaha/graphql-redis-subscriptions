@@ -31,7 +31,8 @@
     "integration": "npm run compile && mocha --reporter spec --full-trace ./dist/test/integration-tests.js ",
     "benchmark": "npm run compile && mocha --reporter spec --full-trace ./dist/test/benchmark.js ",
     "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js",
-    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
+    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "prepublish": "npm run test"
   },
   "dependencies": {
     "async": "^2.0.1",

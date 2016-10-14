@@ -69,7 +69,11 @@ describe('RedisPubSub', function () {
   });
 
   it('cleans up correctly the memory when unsubscribing', function (done) {
-    pubSub.subscribe('Posts', () => null).then(subId => {
+    Promise.all([
+      pubSub.subscribe('Posts', () => null),
+      pubSub.subscribe('Posts', () => null),
+    ])
+    .then(([subId, secondSubId]) => {
       try {
         // This assertion is done against a private member, if you change the internals, you may want to change that
         expect((pubSub as any).subscriptionMap[subId]).not.to.be.an('undefined');
@@ -77,6 +81,7 @@ describe('RedisPubSub', function () {
         // This assertion is done against a private member, if you change the internals, you may want to change that
         expect((pubSub as any).subscriptionMap[subId]).to.be.an('undefined');
         expect(() => pubSub.unsubscribe(subId)).to.throw(`There is no subscription of id "${subId}"`);
+        pubSub.unsubscribe(secondSubId);
         done();
 
       } catch (e) {

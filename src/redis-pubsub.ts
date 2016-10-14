@@ -80,6 +80,7 @@ export class RedisPubSub implements PubSubEngine {
     }
 
     this.subsRefsMap[triggerName] = newRefs;
+    delete this.subscriptionMap[subId];
   }
 
   private onMessage(channel: string, message: string) {

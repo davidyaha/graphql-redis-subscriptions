@@ -53,7 +53,6 @@ describe('RedisPubSub', function () {
   });
 
   it('can unsubscribe from specific redis channel', function (done) {
-
     pubSub.subscribe('Posts', () => null).then(subId => {
       pubSub.unsubscribe(subId);
 
@@ -61,6 +60,28 @@ describe('RedisPubSub', function () {
         expect(unsubscribeSpy.callCount).to.equals(1);
         const call = unsubscribeSpy.lastCall;
         expect(call.args).to.have.members(['Posts']);
+        done();
+
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
+  it('cleans up correctly the memory when unsubscribing', function (done) {
+    Promise.all([
+      pubSub.subscribe('Posts', () => null),
+      pubSub.subscribe('Posts', () => null),
+    ])
+    .then(([subId, secondSubId]) => {
+      try {
+        // This assertion is done against a private member, if you change the internals, you may want to change that
+        expect((pubSub as any).subscriptionMap[subId]).not.to.be.an('undefined');
+        pubSub.unsubscribe(subId);
+        // This assertion is done against a private member, if you change the internals, you may want to change that
+        expect((pubSub as any).subscriptionMap[subId]).to.be.an('undefined');
+        expect(() => pubSub.unsubscribe(subId)).to.throw(`There is no subscription of id "${subId}"`);
+        pubSub.unsubscribe(secondSubId);
         done();
 
       } catch (e) {

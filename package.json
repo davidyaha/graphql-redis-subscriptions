@@ -47,7 +47,7 @@
     "mocha": "^3.0.0",
     "remap-istanbul": "^0.7.0",
     "retyped-simple-mock-tsd-ambient": "0.0.0-0",
-    "simple-mock": "^0.7.0",
+    "simple-mock": "^0.7.2",
     "tsdm": "0.1.0-3",
     "tslint": "^3.13.0",
     "typescript": "^2.0.7",

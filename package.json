@@ -21,6 +21,7 @@
   "homepage": "https://github.com/davidyaha/graphql-redis-subscriptions",
   "scripts": {
     "compile": "tsc",
+    "prepublish": "npm run compile",
     "typings": "typings install && tsdm rewire",
     "pretest": "npm run compile",
     "test": "npm run testonly -- && npm run integration --",

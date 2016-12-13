@@ -37,21 +37,26 @@
   "dependencies": {
     "async": "^2.0.1",
     "graphql-subscriptions": "^0.2.0",
-    "redis": "^2.6.2"
+    "redis": "^2.6.3"
   },
   "devDependencies": {
+    "@types/async": "^2.0.35",
+    "@types/chai": "^3.4.34",
+    "@types/chai-as-promised": "0.0.29",
+    "@types/graphql": "^0.8.2",
+    "@types/mocha": "^2.2.33",
+    "@types/node": "0.0.3",
+    "@types/redis": "^0.12.34",
+    "@types/simple-mock": "0.0.27",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "graphql": "^0.7.0",
+    "graphql": "^0.7.0 || ^0.8.0",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^3.0.0",
     "remap-istanbul": "^0.7.0",
-    "retyped-simple-mock-tsd-ambient": "0.0.0-0",
     "simple-mock": "^0.7.0",
-    "tsdm": "0.1.0-3",
     "tslint": "^3.13.0",
-    "typescript": "^2.0.7",
-    "typings": "^2.0.0"
+    "typescript": "^2.1.4"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

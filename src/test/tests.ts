@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {mock, spy, restore} from 'simple-mock';
+import {spy, restore} from 'simple-mock';
 
 import * as redis from 'redis';
 import {RedisPubSub} from '../redis-pubsub';
@@ -16,17 +16,22 @@ const publishSpy = spy((channel, message) => listener && listener(channel, messa
 const subscribeSpy = spy((channel, cb) => cb && cb(null, channel));
 const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
 
-mock(redis, 'RedisClient').returnWith(null);
+const redisPackage = redis as Object;
 
-const RedisClient = redis.RedisClient;
-mock(RedisClient.prototype, 'publish').callFn(publishSpy);
-mock(RedisClient.prototype, 'subscribe').callFn(subscribeSpy);
-mock(RedisClient.prototype, 'unsubscribe').callFn(unsubscribeSpy);
-mock(RedisClient.prototype, 'on').callFn((event, cb) => {
-  if (event === 'message') {
-    listener = cb;
-  }
-});
+const createClient = function() {
+  return {
+    publish: publishSpy,
+    subscribe: subscribeSpy,
+    unsubscribe: unsubscribeSpy,
+    on: (event, cb) => {
+      if (event === 'message') {
+        listener = cb;
+      }
+    },
+  };
+};
+
+redisPackage['createClient'] = createClient;
 
 // -------------- Mocking Redis Client ------------------
 

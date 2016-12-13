@@ -6,11 +6,9 @@ node_js:
 cache:
   directories:
     - node_modules
-    - typings
 
 install:
   - npm install
-  - npm run typings
 
 services:
   - redis-server

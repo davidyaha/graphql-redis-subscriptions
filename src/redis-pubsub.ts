@@ -24,6 +24,9 @@ export class RedisPubSub implements PubSubEngine {
       this.redisPublisher.on('error', options.connectionListener);
       this.redisSubscriber.on('connect', options.connectionListener);
       this.redisSubscriber.on('error', options.connectionListener);
+    } else {
+      this.redisPublisher.on('error', console.error);
+      this.redisSubscriber.on('error', console.error);
     }
 
     this.subscriptionMap = {};

@@ -54,7 +54,7 @@
     "mocha": "^3.0.0",
     "remap-istanbul": "^0.7.0",
     "simple-mock": "^0.7.0",
-    "tslint": "^3.13.0",
+    "tslint": "^4.1.1",
     "typescript": "^2.1.4"
   },
   "typings": "dist/index.d.ts",

@@ -58,7 +58,7 @@ When I call `subscribe` like this:
 ```javascript
 const query = `
   subscription X($repoName: String!) {
-    comments.added(repoName: $repoName)
+    commentsAdded(repoName: $repoName)
   }
 `;
 const variables = {repoName: 'graphql-redis-subscriptions'};

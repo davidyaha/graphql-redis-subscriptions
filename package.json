@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "async": "^2.0.1",
-    "graphql-subscriptions": "^0.2.0",
+    "graphql-subscriptions": "^0.3.0",
     "redis": "^2.6.3"
   },
   "devDependencies": {

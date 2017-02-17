@@ -1,6 +1,6 @@
 # graphql-redis-subscriptions
 
-This package implements the PusSubEngine Interface from the graphql-subscriptions package. 
+This package implements the PubSubEngine Interface from the graphql-subscriptions package. 
 It allows you to connect your subscriptions manger to a redis Pub Sub mechanism to support 
 multiple subscription manager instances.
    

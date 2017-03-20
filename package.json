@@ -52,7 +52,7 @@
     "graphql": "^0.9.1",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^3.0.0",
-    "remap-istanbul": "^0.8.4",
+    "remap-istanbul": "^0.9.0",
     "simple-mock": "^0.7.0",
     "tslint": "^3.13.0",
     "typescript": "^2.1.4"

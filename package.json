@@ -1,6 +1,6 @@
 {
   "name": "graphql-redis-subscriptions",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "A graphql-subscriptions PubSub Engine using redis",
   "main": "dist/index.js",
   "repository": {

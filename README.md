@@ -1,5 +1,7 @@
 # graphql-redis-subscriptions
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/davidyaha/graphql-redis-subscriptions.svg)](https://greenkeeper.io/)
+
 This package implements the PubSubEngine Interface from the graphql-subscriptions package. 
 It allows you to connect your subscriptions manger to a redis Pub Sub mechanism to support 
 multiple subscription manager instances.

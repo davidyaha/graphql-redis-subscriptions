@@ -213,7 +213,7 @@ describe('Benchmark EE PubSub', function () {
     };
 
     it(`should be able to publish ${mutationsPerSec} empty query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
         }
@@ -222,20 +222,20 @@ describe('Benchmark EE PubSub', function () {
     });
 
     it(`should be able to publish ${smallQueriesPerSec} small query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
           createdAt
           postedBy {
             login
           }
-        } 
+        }
       }`;
       testMutationsPerSecond.call(this, smallQueriesPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${mediumQueryPerSec} medium query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
           createdAt
@@ -246,13 +246,13 @@ describe('Benchmark EE PubSub', function () {
             avatar_url
             html_url
           }
-        } 
+        }
       }`;
       testMutationsPerSecond.call(this, mediumQueryPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${fullQueryPerSec} full query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
           createdAt
@@ -267,7 +267,7 @@ describe('Benchmark EE PubSub', function () {
             name
             last_visit
           }
-        } 
+        }
       }`;
       testMutationsPerSecond.call(this, fullQueryPerSec, mutationResult, subManager, query, done);
     });
@@ -388,7 +388,7 @@ describe('Benchmark Redis PubSub', function () {
     };
 
     it(`should be able to publish ${mutationsPerSec} empty query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
         }
@@ -397,20 +397,20 @@ describe('Benchmark Redis PubSub', function () {
     });
 
     it(`should be able to publish ${smallQueriesPerSec} small query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
           createdAt
           postedBy {
             login
           }
-        } 
+        }
       }`;
       testMutationsPerSecond.call(this, smallQueriesPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${mediumQueryPerSec} medium query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
           createdAt
@@ -421,13 +421,13 @@ describe('Benchmark Redis PubSub', function () {
             avatar_url
             html_url
           }
-        } 
+        }
       }`;
       testMutationsPerSecond.call(this, mediumQueryPerSec, mutationResult, subManager, query, done);
     });
 
     it(`should be able to publish ${fullQueryPerSec} full query mutation results under a second`, function (done) {
-      const query = `subscription X{ 
+      const query = `subscription X{
         commentAdded {
           id
           createdAt
@@ -442,7 +442,7 @@ describe('Benchmark Redis PubSub', function () {
             name
             last_visit
           }
-        } 
+        }
       }`;
       testMutationsPerSecond.call(this, fullQueryPerSec, mutationResult, subManager, query, done);
     });
@@ -475,7 +475,7 @@ function testEventsPerSecond(eventsPerSec: number, eventPayload: any, subManager
       subManager.publish('testSubscription2', eventPayload);
     }
   }).catch(done);
-};
+}
 
 function testMutationsPerSecond(mutationsPerSec: number, mutationPayload: any, subManager: SubscriptionManager, query: string, done) {
   this.slow(1500);
@@ -514,4 +514,4 @@ function testMutationsPerSecond(mutationsPerSec: number, mutationPayload: any, s
       subManager.publish('commentAdded', mutationPayload);
     }
   }).catch(done);
-};
+}

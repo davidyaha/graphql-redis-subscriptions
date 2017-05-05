@@ -12,10 +12,10 @@ export class RedisPubSub implements PubSubEngine {
 
   constructor(options: PubSubRedisOptions = {}) {
     this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
-    
+
     this.redisPublisher = createClient(options.connection);
     this.redisSubscriber = createClient(options.connection);
-    
+
     // TODO support for pattern based message
     this.redisSubscriber.on('message', this.onMessage.bind(this));
 
@@ -69,8 +69,7 @@ export class RedisPubSub implements PubSubEngine {
     const [triggerName = null] = this.subscriptionMap[subId] || [];
     const refs = this.subsRefsMap[triggerName];
 
-    if (!refs)
-      throw new Error(`There is no subscription of id "${subId}"`);
+    if (!refs) throw new Error(`There is no subscription of id "${subId}"`);
 
     let newRefs;
     if (refs.length === 1) {
@@ -79,7 +78,7 @@ export class RedisPubSub implements PubSubEngine {
 
     } else {
       const index = refs.indexOf(subId);
-      if (index != -1) {
+      if (index !== -1) {
         newRefs = [...refs.slice(0, index), ...refs.slice(index + 1)];
       }
     }
@@ -92,8 +91,7 @@ export class RedisPubSub implements PubSubEngine {
     const subscribers = this.subsRefsMap[channel];
 
     // Don't work for nothing..
-    if (!subscribers || !subscribers.length)
-      return;
+    if (!subscribers || !subscribers.length) return;
 
     let parsedMessage;
     try {
@@ -107,7 +105,7 @@ export class RedisPubSub implements PubSubEngine {
       const [triggerName, listener] = this.subscriptionMap[subId];
       listener(parsedMessage);
       cb();
-    })
+    });
   }
 
   private triggerTransform: TriggerTransform;

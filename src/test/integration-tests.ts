@@ -128,7 +128,7 @@ describe('SubscriptionManager', function() {
       subManager.publish('testSubscription', 'good');
       setTimeout(() => {
         subManager.unsubscribe(subId);
-      }, 1);
+      }, 2);
     });
   });
 
@@ -155,7 +155,7 @@ describe('SubscriptionManager', function() {
       subManager.publish('Filter1', {filterBoolean: true });
       setTimeout(() => {
         subManager.unsubscribe(subId);
-      }, 2);
+      }, 4);
     });
   });
 
@@ -190,7 +190,7 @@ describe('SubscriptionManager', function() {
       subManager.publish('Trigger2', {filterBoolean: true });
       setTimeout(() => {
         subManager.unsubscribe(subId);
-      }, 3);
+      }, 6);
     });
   });
 
@@ -223,10 +223,9 @@ describe('SubscriptionManager', function() {
     }`;
     const callback = function(err, payload){
       try {
+        // tslint:disable-next-line:no-unused-expression
         expect(payload).to.be.undefined;
-        expect(err.message).to.equals(
-          'Variable "$uga" of required type "Boolean!" was not provided.'
-        );
+        expect(err.message).to.equals('Variable "$uga" of required type "Boolean!" was not provided.');
       } catch (e) {
         done(e);
         return;
@@ -238,7 +237,7 @@ describe('SubscriptionManager', function() {
       subManager.publish('testSubscription', 'good');
       setTimeout(() => {
         subManager.unsubscribe(subId);
-      }, 4);
+      }, 8);
     });
   });
 

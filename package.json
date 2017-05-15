@@ -20,15 +20,15 @@
   },
   "homepage": "https://github.com/davidyaha/graphql-redis-subscriptions",
   "scripts": {
+    "precompile": "rimraf dist",
     "compile": "tsc",
-    "pretest": "npm run compile",
-    "test": "npm run testonly -- && npm run integration --",
+    "test": "npm run testonly",
     "posttest": "npm run lint",
     "lint": "tslint ./src/**/*.ts",
     "watch": "tsc -w",
-    "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js ",
-    "integration": "npm run compile && mocha --reporter spec --full-trace ./dist/test/integration-tests.js ",
-    "benchmark": "npm run compile && mocha --reporter spec --full-trace ./dist/test/benchmark.js ",
+    "testonly": "jest --coverage",
+    "integration": "mocha --reporter spec --full-trace ./dist/test/integration-tests.js ",
+    "benchmark": "mocha --reporter spec --full-trace ./dist/test/benchmark.js ",
     "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "prepublish": "npm run test"
@@ -40,25 +40,38 @@
   },
   "devDependencies": {
     "@types/async": "^2.0.35",
-    "@types/chai": "^3.4.34",
-    "@types/chai-as-promised": "0.0.30",
     "@types/graphql": "^0.9.0",
-    "@types/mocha": "^2.2.33",
+    "@types/jest": "^19.2.3",
     "@types/node": "7.0.18",
     "@types/redis": "^0.12.34",
-    "@types/simple-mock": "0.0.27",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "graphql": "^0.9.6",
     "istanbul": "1.0.0-alpha.2",
+    "jest-cli": "^20.0.1",
     "mocha": "^3.0.0",
     "remap-istanbul": "^0.9.5",
+    "rimraf": "^2.6.1",
     "simple-mock": "^0.7.0",
+    "ts-jest": "^20.0.3",
     "tslint": "^5.2.0",
     "typescript": "^2.1.4"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "mapCoverage": true
   }
 }

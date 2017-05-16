@@ -1,6 +1,3 @@
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-
 import {
   GraphQLSchema,
   GraphQLObjectType,
@@ -11,10 +8,6 @@ import {
 
 import {SubscriptionManager} from 'graphql-subscriptions';
 import {RedisPubSub} from '../redis-pubsub';
-
-chai.use(chaiAsPromised);
-const expect = chai.expect;
-const assert = chai.assert;
 
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -93,21 +86,21 @@ describe('SubscriptionManager', function() {
     const query = 'query a{ testInt }';
     const callback = () => null;
     return expect(subManager.subscribe({ query, operationName: 'a', callback }))
-      .to.eventually.be.rejectedWith('Subscription query has validation errors');
+      .rejects.toEqual(new Error('Subscription query has validation errors'));
   });
 
   it('rejects subscriptions with more than one root field', function() {
     const query = 'subscription X{ a: testSubscription, b: testSubscription }';
     const callback = () => null;
     return expect(subManager.subscribe({ query, operationName: 'X', callback }))
-      .to.eventually.be.rejectedWith('Subscription query has validation errors');
+      .rejects.toEqual(new Error('Subscription query has validation errors'));
   });
 
   it('can subscribe with a valid query and gets a subId back', function() {
     const query = 'subscription X{ testSubscription }';
     const callback = () => null;
-    subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
-      expect(subId).to.be.a('number');
+    return subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
+      expect(typeof subId).toBe('number');
       subManager.unsubscribe(subId);
     });
   });
@@ -115,12 +108,7 @@ describe('SubscriptionManager', function() {
   it('can subscribe with a valid query and get the root value', function(done) {
     const query = 'subscription X{ testSubscription }';
     const callback = function(err, payload){
-      try {
-        expect(payload.data.testSubscription).to.equals('good');
-      } catch (e) {
-        done(e);
-        return;
-      }
+      expect(payload.data.testSubscription).toBe('good');
       done();
     };
 
@@ -137,12 +125,7 @@ describe('SubscriptionManager', function() {
        testFilter(filterBoolean: $filterBoolean)
       }`;
     const callback = function(err, payload){
-      try {
-        expect(payload.data.testFilter).to.equals('goodFilter');
-      } catch (e) {
-        done(e);
-        return;
-      }
+      expect(payload.data.testFilter).toBe('goodFilter');
       done();
     };
     subManager.subscribe({
@@ -168,13 +151,8 @@ describe('SubscriptionManager', function() {
        testFilterMulti(filterBoolean: $filterBoolean, a: $uga, b: 66)
       }`;
     const callback = function(err, payload){
-      try {
-        expect(payload.data.testFilterMulti).to.equals('goodFilter');
-        triggerCount++;
-      } catch (e) {
-        done(e);
-        return;
-      }
+      expect(payload.data.testFilterMulti).toBe('goodFilter');
+      triggerCount++;
       if (triggerCount === 2) {
         done();
       }
@@ -197,24 +175,18 @@ describe('SubscriptionManager', function() {
   it('can unsubscribe', function(done) {
     const query = 'subscription X{ testSubscription }';
     const callback = (err, payload) => {
-      try {
-        assert(false);
-      } catch (e) {
-        done(e);
-        return;
-      }
+      assert(false);
       done();
     };
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
       subManager.unsubscribe(subId);
       subManager.publish('testSubscription', 'bad');
-      setTimeout(done, 30);
+      setTimeout(done, 1000);
     });
   });
 
   it('throws an error when trying to unsubscribe from unknown id', function () {
-    expect(() => subManager.unsubscribe(123))
-      .to.throw('undefined');
+    expect(() => subManager.unsubscribe(123)).toThrowError('undefined');
   });
 
   it('calls the error callback if there is an execution error', function(done) {
@@ -222,14 +194,8 @@ describe('SubscriptionManager', function() {
       testSubscription  @skip(if: $uga)
     }`;
     const callback = function(err, payload){
-      try {
-        // tslint:disable-next-line:no-unused-expression
-        expect(payload).to.be.undefined;
-        expect(err.message).to.equals('Variable "$uga" of required type "Boolean!" was not provided.');
-      } catch (e) {
-        done(e);
-        return;
-      }
+      expect(payload).toBeUndefined();
+      expect(err.message).toBe('Variable "$uga" of required type "Boolean!" was not provided.');
       done();
     };
 
@@ -260,12 +226,8 @@ describe('SubscriptionManager', function() {
     });
 
     const callback = (err, payload) => {
-      try {
-        expect(payload.data.testChannelOptions).to.equals('test');
-        done();
-      } catch (e) {
-        done(e);
-      }
+      expect(payload.data.testChannelOptions).toBe('test');
+      done();
     };
 
     const query = `

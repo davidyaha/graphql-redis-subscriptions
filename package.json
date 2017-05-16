@@ -26,11 +26,9 @@
     "posttest": "npm run lint",
     "lint": "tslint ./src/**/*.ts",
     "watch": "tsc -w",
-    "testonly": "jest --coverage",
-    "integration": "mocha --reporter spec --full-trace ./dist/test/integration-tests.js ",
-    "benchmark": "mocha --reporter spec --full-trace ./dist/test/benchmark.js ",
-    "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js",
-    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "testonly": "jest",
+    "test:watch": "jest --watch",
+    "coverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "prepublish": "npm run test"
   },
   "dependencies": {
@@ -44,15 +42,11 @@
     "@types/jest": "^19.2.3",
     "@types/node": "7.0.18",
     "@types/redis": "^0.12.34",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
     "graphql": "^0.9.6",
     "istanbul": "1.0.0-alpha.2",
     "jest-cli": "^20.0.1",
-    "mocha": "^3.0.0",
     "remap-istanbul": "^0.9.5",
     "rimraf": "^2.6.1",
-    "simple-mock": "^0.7.0",
     "ts-jest": "^20.0.3",
     "tslint": "^5.2.0",
     "typescript": "^2.1.4"
@@ -72,6 +66,9 @@
       "tsx",
       "js"
     ],
-    "mapCoverage": true
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom" : ["src/**/*.{ts|tsx|js}", "!**/node_modules/**", "!**/test/**"],
+    "coverageReporters": ["lcov", "text-summary"]
   }
 }

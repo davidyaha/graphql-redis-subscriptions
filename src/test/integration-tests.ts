@@ -222,6 +222,7 @@ describe('SubscriptionManager', function() {
       testSubscription  @skip(if: $uga)
     }`;
     const callback = function(err, payload){
+      console.log("inside callback. payload =", payload);
       try {
         // tslint:disable-next-line:no-unused-expression
         expect(payload).to.be.undefined;

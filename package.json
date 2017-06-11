@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "graphql-subscriptions": "^0.4.2",
+    "iterall": "^1.1.1",
     "redis": "^2.6.3"
   },
   "devDependencies": {

@@ -243,7 +243,9 @@ describe('PubSubAsyncIterator', function() {
     const pubSub = new RedisPubSub();
     const eventName = 'test';
     const iterator = pubSub.asyncIterator(eventName);
+    // tslint:disable-next-line:no-unused-expression
     expect(iterator).to.exist;
+    // tslint:disable-next-line:no-unused-expression
     expect(isAsyncIterable(iterator)).to.be.true;
   });
 
@@ -253,8 +255,11 @@ describe('PubSubAsyncIterator', function() {
     const iterator = pubSub.asyncIterator(eventName);
 
     iterator.next().then(result => {
+      // tslint:disable-next-line:no-unused-expression
       expect(result).to.exist;
+      // tslint:disable-next-line:no-unused-expression
       expect(result.value).to.exist;
+      // tslint:disable-next-line:no-unused-expression
       expect(result.done).to.exist;
       done();
     });
@@ -293,17 +298,23 @@ describe('PubSubAsyncIterator', function() {
     const iterator = pubSub.asyncIterator<any>(eventName);
 
     iterator.next().then(result => {
+      // tslint:disable-next-line:no-unused-expression
       expect(result).to.exist;
+      // tslint:disable-next-line:no-unused-expression
       expect(result.value).to.exist;
       expect(result.value.test).to.equal('word');
+      // tslint:disable-next-line:no-unused-expression
       expect(result.done).to.be.false;
     });
 
     pubSub.publish(eventName, { test: 'word' });
 
     iterator.next().then(result => {
+      // tslint:disable-next-line:no-unused-expression
       expect(result).to.exist;
+      // tslint:disable-next-line:no-unused-expression
       expect(result.value).not.to.exist;
+      // tslint:disable-next-line:no-unused-expression
       expect(result.done).to.be.true;
       done();
     });

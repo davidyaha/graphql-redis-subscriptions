@@ -2,6 +2,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {
+  parse,
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
@@ -16,61 +17,62 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 const assert = chai.assert;
 
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: 'Query',
-    fields: {
-      testString: {
-        type: GraphQLString,
-        resolve: function (_, args) {
-          return 'works';
-        },
-      },
-    },
-  }),
-  subscription: new GraphQLObjectType({
-    name: 'Subscription',
-    fields: {
-      testSubscription: {
-        type: GraphQLString,
-        resolve: function (root) {
-          return root;
-        },
-      },
-      testFilter: {
-        type: GraphQLString,
-        resolve: function (root, { filterBoolean }) {
-          return filterBoolean ? 'goodFilter' : 'badFilter';
-        },
-        args: {
-          filterBoolean: { type: GraphQLBoolean },
-        },
-      },
-      testFilterMulti: {
-        type: GraphQLString,
-        resolve: function (root, { filterBoolean }) {
-          return filterBoolean ? 'goodFilter' : 'badFilter';
-        },
-        args: {
-          filterBoolean: { type: GraphQLBoolean },
-          a: { type: GraphQLString },
-          b: { type: GraphQLInt },
-        },
-      },
-      testChannelOptions: {
-        type: GraphQLString,
-        resolve: function (root) {
-          return root;
-        },
-        args: {
-          repoName: {type: GraphQLString},
-        },
-      },
-    },
-  }),
-});
-
 describe('SubscriptionManager', function() {
+
+  const schema = new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        testString: {
+          type: GraphQLString,
+          resolve: function (_, args) {
+            return 'works';
+          },
+        },
+      },
+    }),
+    subscription: new GraphQLObjectType({
+      name: 'Subscription',
+      fields: {
+        testSubscription: {
+          type: GraphQLString,
+          resolve: function (root) {
+            return root;
+          },
+        },
+        testFilter: {
+          type: GraphQLString,
+          resolve: function (root, { filterBoolean }) {
+            return filterBoolean ? 'goodFilter' : 'badFilter';
+          },
+          args: {
+            filterBoolean: { type: GraphQLBoolean },
+          },
+        },
+        testFilterMulti: {
+          type: GraphQLString,
+          resolve: function (root, { filterBoolean }) {
+            return filterBoolean ? 'goodFilter' : 'badFilter';
+          },
+          args: {
+            filterBoolean: { type: GraphQLBoolean },
+            a: { type: GraphQLString },
+            b: { type: GraphQLInt },
+          },
+        },
+        testChannelOptions: {
+          type: GraphQLString,
+          resolve: function (root) {
+            return root;
+          },
+          args: {
+            repoName: {type: GraphQLString},
+          },
+        },
+      },
+    }),
+  });
+
   const subManager = new SubscriptionManager({
     schema,
     setupFunctions: {
@@ -224,8 +226,11 @@ describe('SubscriptionManager', function() {
     const callback = function(err, payload){
       try {
         // tslint:disable-next-line:no-unused-expression
-        expect(payload).to.be.undefined;
-        expect(err.message).to.equals('Variable "$uga" of required type "Boolean!" was not provided.');
+        expect(payload).to.exist;
+        // tslint:disable-next-line:no-unused-expression
+        expect(payload.errors).to.exist;
+        expect(payload.errors.length).to.equal(1);
+        expect(payload.errors[0].message).to.equal('Variable "$uga" of required type "Boolean!" was not provided.');
       } catch (e) {
         done(e);
         return;
@@ -282,5 +287,86 @@ describe('SubscriptionManager', function() {
       setTimeout(() => pubsub.unsubscribe(subId), 4);
     });
 
+  });
+});
+
+
+// From https://github.com/apollographql/graphql-subscriptions/blob/master/src/test/asyncIteratorSubscription.ts
+import { isAsyncIterable } from 'iterall';
+import { mock } from 'simple-mock';
+import { withFilter } from '../with-filter';
+import { subscribe } from 'graphql/subscription';
+const FIRST_EVENT = 'FIRST_EVENT';
+
+function buildSchema(iterator) {
+  return new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        testString: {
+          type: GraphQLString,
+          resolve: function(_, args) {
+            return 'works';
+          },
+        },
+      },
+    }),
+    subscription: new GraphQLObjectType({
+      name: 'Subscription',
+      fields: {
+        testSubscription: {
+          type: GraphQLString,
+          subscribe: withFilter(
+            () => iterator,
+            () => true,
+          ),
+          resolve: root => {
+            return 'FIRST_EVENT';
+          },
+        },
+      },
+    }),
+  });
+}
+
+describe('PubSubAsyncIterator', function() {
+
+  const query = parse(`
+    subscription S1 {
+      testSubscription
+    }
+  `);
+
+  const pubsub = new RedisPubSub();
+  const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+  const returnSpy = mock(origIterator, 'return');
+  const schema = buildSchema(origIterator);
+  const results = subscribe(schema, query);
+
+  it('should allow subscriptions', () => {
+    const payload1 = results.next();
+
+    // tslint:disable-next-line:no-unused-expression
+    expect(isAsyncIterable(results)).to.be.true;
+
+    const r = payload1.then(res => {
+      expect(res.value.data.testSubscription).to.equal('FIRST_EVENT');
+    });
+
+    pubsub.publish(FIRST_EVENT, {});
+
+    return r;
+  });
+
+  it('should clear event handlers', () => {
+    const end = results.return();
+
+    const r = end.then(res => {
+      expect(returnSpy.callCount).to.be.gte(1);
+    });
+
+    pubsub.publish(FIRST_EVENT, {});
+
+    return r;
   });
 });

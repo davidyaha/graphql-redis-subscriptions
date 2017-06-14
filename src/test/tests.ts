@@ -1,9 +1,9 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {spy, restore} from 'simple-mock';
-import {isAsyncIterable} from 'iterall';
+import { spy, restore } from 'simple-mock';
+import { isAsyncIterable } from 'iterall';
 import * as redis from 'redis';
-import {RedisPubSub} from '../redis-pubsub';
+import { RedisPubSub } from '../redis-pubsub';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -18,7 +18,7 @@ const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
 
 const redisPackage = redis as Object;
 
-const createClient = function() {
+const createClient = function () {
   return {
     publish: publishSpy,
     subscribe: subscribeSpy,
@@ -77,21 +77,21 @@ describe('RedisPubSub', function () {
       pubSub.subscribe('Posts', () => null),
       pubSub.subscribe('Posts', () => null),
     ])
-    .then(([subId, secondSubId]) => {
-      try {
-        // This assertion is done against a private member, if you change the internals, you may want to change that
-        expect((pubSub as any).subscriptionMap[subId]).not.to.be.an('undefined');
-        pubSub.unsubscribe(subId);
-        // This assertion is done against a private member, if you change the internals, you may want to change that
-        expect((pubSub as any).subscriptionMap[subId]).to.be.an('undefined');
-        expect(() => pubSub.unsubscribe(subId)).to.throw(`There is no subscription of id "${subId}"`);
-        pubSub.unsubscribe(secondSubId);
-        done();
+      .then(([subId, secondSubId]) => {
+        try {
+          // This assertion is done against a private member, if you change the internals, you may want to change that
+          expect((pubSub as any).subscriptionMap[subId]).not.to.be.an('undefined');
+          pubSub.unsubscribe(subId);
+          // This assertion is done against a private member, if you change the internals, you may want to change that
+          expect((pubSub as any).subscriptionMap[subId]).to.be.an('undefined');
+          expect(() => pubSub.unsubscribe(subId)).to.throw(`There is no subscription of id "${subId}"`);
+          pubSub.unsubscribe(secondSubId);
+          done();
 
-      } catch (e) {
-        done(e);
-      }
-    });
+        } catch (e) {
+          done(e);
+        }
+      });
   });
 
   it('will not unsubscribe from the redis channel if there is another subscriber on it\'s subscriber list', function (done) {
@@ -187,7 +187,7 @@ describe('RedisPubSub', function () {
       }
     }).then(subId => {
       try {
-        pubSub.publish('Posts', {comment : 'This is amazing'});
+        pubSub.publish('Posts', { comment: 'This is amazing' });
         pubSub.unsubscribe(subId);
       } catch (e) {
         done(e);
@@ -202,7 +202,7 @@ describe('RedisPubSub', function () {
   });
 
   it('can use transform function to convert the trigger name given into more explicit channel name', function (done) {
-    const triggerTransform = (trigger, {repoName}) => `${trigger}.${repoName}`;
+    const triggerTransform = (trigger, { repoName }) => `${trigger}.${repoName}`;
     const pubsub = new RedisPubSub({
       triggerTransform,
     });
@@ -216,7 +216,7 @@ describe('RedisPubSub', function () {
       }
     };
 
-    pubsub.subscribe('comments', validateMessage, {repoName: 'graphql-redis-subscriptions'}).then(subId => {
+    pubsub.subscribe('comments', validateMessage, { repoName: 'graphql-redis-subscriptions' }).then(subId => {
       pubsub.publish('comments.graphql-redis-subscriptions', 'test');
       pubsub.unsubscribe(subId);
     });
@@ -237,7 +237,7 @@ describe('RedisPubSub', function () {
 
 });
 
-describe('PubSubAsyncIterator', function() {
+describe('PubSubAsyncIterator', function () {
 
   it('should expose valid asyncItrator for a specific event', () => {
     const pubSub = new RedisPubSub();

@@ -1,6 +1,6 @@
-import {PubSubEngine} from 'graphql-subscriptions/dist/pubsub-engine';
-import {createClient, RedisClient, ClientOpts as RedisOptions} from 'redis';
-import {PubSubAsyncIterator} from './pubsub-async-iterator';
+import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub-engine';
+import { createClient, RedisClient, ClientOpts as RedisOptions } from 'redis';
+import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
@@ -114,8 +114,8 @@ export class RedisPubSub implements PubSubEngine {
   private redisSubscriber: RedisClient;
   private redisPublisher: RedisClient;
 
-  private subscriptionMap: {[subId: number]: [string , Function]};
-  private subsRefsMap: {[trigger: string]: Array<number>};
+  private subscriptionMap: { [subId: number]: [string, Function] };
+  private subsRefsMap: { [trigger: string]: Array<number> };
   private currentSubscriptionId: number;
 }
 

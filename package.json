@@ -54,7 +54,7 @@
     "remap-istanbul": "^0.9.5",
     "simple-mock": "^0.7.0",
     "tslint": "^5.2.0",
-    "typescript": "^2.3.4"
+    "typescript": "^2.4.1"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

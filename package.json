@@ -1,6 +1,6 @@
 {
   "name": "graphql-redis-subscriptions",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "description": "A graphql-subscriptions PubSub Engine using redis",
   "main": "dist/index.js",
   "repository": {
@@ -24,7 +24,7 @@
     "pretest": "npm run compile",
     "test": "npm run testonly -- && npm run integration --",
     "posttest": "npm run lint",
-    "lint": "tslint ./src/**/*.ts",
+    "lint": "tslint --type-check --project ./tsconfig.json ./src/**/*.ts",
     "watch": "tsc -w",
     "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js ",
     "integration": "npm run compile && mocha --reporter spec --full-trace ./dist/test/integration-tests.js ",
@@ -34,28 +34,27 @@
     "prepublish": "npm run test"
   },
   "dependencies": {
-    "async": "^2.0.1",
-    "graphql-subscriptions": "^0.3.1",
+    "graphql-subscriptions": "^0.4.2",
+    "iterall": "^1.1.1",
     "redis": "^2.6.3"
   },
   "devDependencies": {
-    "@types/async": "^2.0.35",
     "@types/chai": "^3.4.34",
-    "@types/chai-as-promised": "0.0.30",
+    "@types/chai-as-promised": "0.0.31",
     "@types/graphql": "^0.9.0",
     "@types/mocha": "^2.2.33",
-    "@types/node": "7.0.18",
+    "@types/node": "7.0.19",
     "@types/redis": "^2.6.0",
     "@types/simple-mock": "0.0.27",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "graphql": "^0.9.6",
+    "graphql": "^0.10.1",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^3.0.0",
     "remap-istanbul": "^0.9.5",
-    "simple-mock": "^0.7.0",
+    "simple-mock": "^0.8.0",
     "tslint": "^5.2.0",
-    "typescript": "^2.1.4"
+    "typescript": "^2.3.4"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

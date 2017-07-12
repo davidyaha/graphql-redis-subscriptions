@@ -8,8 +8,8 @@ import {
   GraphQLID,
 } from 'graphql';
 
-import {SubscriptionManager, PubSub} from 'graphql-subscriptions';
-import {RedisPubSub} from '../redis-pubsub';
+import { SubscriptionManager, PubSub } from 'graphql-subscriptions';
+import { RedisPubSub } from '../redis-pubsub';
 
 const expect = chai.expect;
 
@@ -120,7 +120,7 @@ describe('Benchmark EE PubSub', function () {
       const callback = () => publishesCounter++;
 
       for (let i = 0; i < numberOfSubscribers; i++) {
-        const promise = subManager.subscribe({query, operationName: 'X', callback});
+        const promise = subManager.subscribe({ query, operationName: 'X', callback });
         subsPromises.push(promise);
       }
 
@@ -295,7 +295,7 @@ describe('Benchmark Redis PubSub', function () {
       const callback = () => publishesCounter++;
 
       for (let i = 0; i < numberOfSubscribers; i++) {
-        const promise = subManager.subscribe({query, operationName: 'X', callback});
+        const promise = subManager.subscribe({ query, operationName: 'X', callback });
         subsPromises.push(promise);
       }
 
@@ -468,7 +468,7 @@ function testEventsPerSecond(eventsPerSec: number, eventPayload: any, subManager
     }
   };
 
-  subManager.subscribe({query, operationName: 'X', callback}).then(id => {
+  subManager.subscribe({ query, operationName: 'X', callback }).then(id => {
     subId = id;
     start = Date.now();
     for (let i = 0; i < eventsPerSec; i++) {
@@ -504,7 +504,7 @@ function testMutationsPerSecond(mutationsPerSec: number, mutationPayload: any, s
     }
   };
 
-  subManager.subscribe({query, operationName: 'X', callback}).then(id => {
+  subManager.subscribe({ query, operationName: 'X', callback }).then(id => {
     subId = id;
     start = Date.now();
     for (let i = 0; i < mutationsPerSec; i++) {

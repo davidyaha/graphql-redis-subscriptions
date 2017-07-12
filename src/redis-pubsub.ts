@@ -1,6 +1,6 @@
-import {PubSubEngine} from 'graphql-subscriptions/dist/pubsub';
-import {createClient, RedisClient, ClientOpts as RedisOptions} from 'redis';
-import {each} from 'async';
+import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub-engine';
+import { createClient, RedisClient, ClientOpts as RedisOptions } from 'redis';
+import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
@@ -87,6 +87,10 @@ export class RedisPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
   }
 
+  public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
+    return new PubSubAsyncIterator<T>(this, triggers);
+  }
+
   private onMessage(channel: string, message: string) {
     const subscribers = this.subsRefsMap[channel];
 
@@ -100,20 +104,18 @@ export class RedisPubSub implements PubSubEngine {
       parsedMessage = message;
     }
 
-    each(subscribers, (subId, cb) => {
-      // TODO Support pattern based subscriptions
-      const [triggerName, listener] = this.subscriptionMap[subId];
+    for (const subId of subscribers) {
+      const listener = this.subscriptionMap[subId][1];
       listener(parsedMessage);
-      cb();
-    });
+    }
   }
 
   private triggerTransform: TriggerTransform;
   private redisSubscriber: RedisClient;
   private redisPublisher: RedisClient;
 
-  private subscriptionMap: {[subId: number]: [string , Function]};
-  private subsRefsMap: {[trigger: string]: Array<number>};
+  private subscriptionMap: { [subId: number]: [string, Function] };
+  private subsRefsMap: { [trigger: string]: Array<number> };
   private currentSubscriptionId: number;
 }
 

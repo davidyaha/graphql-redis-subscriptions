@@ -41,7 +41,7 @@
   "devDependencies": {
     "@types/chai": "^4.0.1",
     "@types/chai-as-promised": "0.0.31",
-    "@types/graphql": "^0.9.0",
+    "@types/graphql": "^0.10.0",
     "@types/mocha": "^2.2.33",
     "@types/node": "7.0.19",
     "@types/redis": "^2.6.0",

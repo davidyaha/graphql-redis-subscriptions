@@ -2,7 +2,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { spy, restore } from 'simple-mock';
 import { isAsyncIterable } from 'iterall';
-import * as redis from 'redis';
+import * as IORedis from 'ioredis';
 import { RedisPubSub } from '../redis-pubsub';
 
 chai.use(chaiAsPromised);
@@ -16,7 +16,7 @@ const publishSpy = spy((channel, message) => listener && listener(channel, messa
 const subscribeSpy = spy((channel, cb) => cb && cb(null, channel));
 const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
 
-const redisPackage = redis as Object;
+const redisPackage = IORedis as Object;
 
 const createClient = function () {
   return {

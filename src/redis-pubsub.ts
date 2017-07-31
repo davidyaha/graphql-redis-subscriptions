@@ -1,5 +1,6 @@
+import * as IORedis from 'ioredis';
+import { RedisOptions, Redis as RedisClient } from 'ioredis';
 import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub-engine';
-import { createClient, RedisClient, ClientOpts as RedisOptions } from 'redis';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
@@ -13,8 +14,8 @@ export class RedisPubSub implements PubSubEngine {
   constructor(options: PubSubRedisOptions = {}) {
     this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
 
-    this.redisPublisher = createClient(options.connection);
-    this.redisSubscriber = createClient(options.connection);
+    this.redisPublisher = new IORedis(options.connection);
+    this.redisSubscriber = new IORedis(options.connection);
 
     // TODO support for pattern based message
     this.redisSubscriber.on('message', this.onMessage.bind(this));

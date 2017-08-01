@@ -91,5 +91,5 @@ const pubsub = new RedisPubSub({
 });
 ```
 
-You can learn more on the redis options object [here](https://github.com/NodeRedis/node_redis#options-object-properties).
+You can learn more on the redis options object [here](https://github.com/luin/ioredis/blob/master/API.md#new_Redis_new).
 

@@ -1,8 +1,8 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as IORedis from 'ioredis';
 import { spy, restore } from 'simple-mock';
 import { isAsyncIterable } from 'iterall';
-import * as IORedis from 'ioredis';
 import { RedisPubSub } from '../redis-pubsub';
 
 chai.use(chaiAsPromised);

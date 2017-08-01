@@ -13,9 +13,8 @@ export class RedisPubSub implements PubSubEngine {
 
   constructor(options: PubSubRedisOptions = {}) {
     this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
-
-    this.redisPublisher = new IORedis(options.connection);
-    this.redisSubscriber = new IORedis(options.connection);
+    this.redisPublisher = (IORedis as any).createClient(options.connection);
+    this.redisSubscriber = (IORedis as any).createClient(options.connection);
 
     // TODO support for pattern based message
     this.redisSubscriber.on('message', this.onMessage.bind(this));

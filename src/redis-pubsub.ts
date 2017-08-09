@@ -6,22 +6,25 @@ export interface PubSubRedisOptions {
   connection?: RedisOptions;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
+  publisher?: RedisClient;
+  subscriber?: RedisClient;
 }
 
 export class RedisPubSub implements PubSubEngine {
 
-  constructor(options: PubSubRedisOptions = {}, publisher?: RedisClient, subscriber?: RedisClient) {
+  constructor(options: PubSubRedisOptions = {}) {
     this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
-    if (subscriber && publisher) {
-      this.redisPublisher = publisher;
-      this.redisSubscriber = subscriber;
+    if (options.subscriber && options.publisher) {
+      this.redisPublisher = options.publisher;
+      this.redisSubscriber = options.subscriber;
     } else {
       try {
         const IORedis = require('ioredis');
         this.redisPublisher = new IORedis(options.connection);
         this.redisSubscriber = new IORedis(options.connection);
       } catch (error) {
-        console.error(`Package 'ioredis' wasn't found. Couldn't create Redis clients.`)
+        console.error(`Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. 
+        Couldn't create Redis clients.`)
       }
 
     }

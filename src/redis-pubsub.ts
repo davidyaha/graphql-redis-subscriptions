@@ -1,20 +1,33 @@
+import { RedisOptions, Redis as RedisClient } from 'ioredis';
 import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub-engine';
-import { createClient, RedisClient, ClientOpts as RedisOptions } from 'redis';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
+  publisher?: RedisClient;
+  subscriber?: RedisClient;
 }
 
 export class RedisPubSub implements PubSubEngine {
 
   constructor(options: PubSubRedisOptions = {}) {
     this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
+    if (options.subscriber && options.publisher) {
+      this.redisPublisher = options.publisher;
+      this.redisSubscriber = options.subscriber;
+    } else {
+      try {
+        const IORedis = require('ioredis');
+        this.redisPublisher = new IORedis(options.connection);
+        this.redisSubscriber = new IORedis(options.connection);
+      } catch (error) {
+        console.error(`Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. 
+        Couldn't create Redis clients.`)
+      }
 
-    this.redisPublisher = createClient(options.connection);
-    this.redisSubscriber = createClient(options.connection);
+    }
 
     // TODO support for pattern based message
     this.redisSubscriber.on('message', this.onMessage.bind(this));
@@ -71,24 +84,27 @@ export class RedisPubSub implements PubSubEngine {
 
     if (!refs) throw new Error(`There is no subscription of id "${subId}"`);
 
-    let newRefs;
     if (refs.length === 1) {
       this.redisSubscriber.unsubscribe(triggerName);
-      newRefs = [];
-
+      delete this.subsRefsMap[triggerName];
     } else {
       const index = refs.indexOf(subId);
-      if (index !== -1) {
-        newRefs = [...refs.slice(0, index), ...refs.slice(index + 1)];
-      }
+      const newRefs = index === -1 ? refs : [...refs.slice(0, index), ...refs.slice(index + 1)];
+      this.subsRefsMap[triggerName] = newRefs;
     }
-
-    this.subsRefsMap[triggerName] = newRefs;
     delete this.subscriptionMap[subId];
   }
 
   public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
     return new PubSubAsyncIterator<T>(this, triggers);
+  }
+
+  public getSubscriber(): RedisClient {
+    return this.redisSubscriber;
+  }
+
+  public getPublisher(): RedisClient {
+    return this.redisPublisher;
   }
 
   private onMessage(channel: string, message: string) {

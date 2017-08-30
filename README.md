@@ -74,7 +74,7 @@ This is one step towards lifting the load off of the graphql api server regardin
 
 ## Creating the Redis Client
 
-But for any production usage, it is recommended to send a redis client from outside.
+For production usage, it is recommended to send a redis client from the using code.
 
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -89,7 +89,11 @@ const options = {
   }
 };
 
-const pubsub = new RedisPubSub({...}, new Redis(options), new Redis(options));
+const pubsub = new RedisPubSub({
+  ...,
+  publisher: new Redis(options),
+  subscriber: new Redis(options)
+});
 ```
 
 You can learn more on ioredis package [here](https://github.com/luin/ioredis).

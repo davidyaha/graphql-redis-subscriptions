@@ -3,6 +3,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { spy, restore } from 'simple-mock';
 import { isAsyncIterable } from 'iterall';
 import { RedisPubSub } from '../redis-pubsub';
+import * as IORedis from 'ioredis';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -26,7 +27,7 @@ const mockRedisClient = {
 };
 const mockOptions = {
   publisher: (mockRedisClient as any),
-  subscriber: (mockRedisClient as any)
+  subscriber: (mockRedisClient as any),
 };
 
 
@@ -34,6 +35,13 @@ const mockOptions = {
 // -------------- Mocking Redis Client ------------------
 
 describe('RedisPubSub', function () {
+
+  it('should create default ioredis clients if none were provided', function (done) {
+    const pubSub = new RedisPubSub();
+    expect(pubSub.getSubscriber()).to.be.an.instanceOf(IORedis);
+    expect(pubSub.getPublisher()).to.be.an.instanceOf(IORedis);
+    done();
+  });
 
   it('can subscribe to specific redis channel and called when a message is published on it', function (done) {
     const pubSub = new RedisPubSub(mockOptions);
@@ -204,7 +212,7 @@ describe('RedisPubSub', function () {
     const pubSub = new RedisPubSub({
       triggerTransform,
       publisher: (mockRedisClient as any),
-      subscriber: (mockRedisClient as any)
+      subscriber: (mockRedisClient as any),
     });
 
     const validateMessage = message => {

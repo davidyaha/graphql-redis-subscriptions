@@ -104,6 +104,14 @@ export class RedisPubSub implements PubSubEngine {
     return new PubSubAsyncIterator<T>(this, triggers);
   }
 
+  public getSubscriber(): RedisClient {
+    return this.redisSubscriber;
+  }
+
+  public getPublisher(): RedisClient {
+    return this.redisPublisher;
+  }
+
   private onMessage(channel: string, message: string) {
     const subscribers = this.subsRefsMap[channel];
 

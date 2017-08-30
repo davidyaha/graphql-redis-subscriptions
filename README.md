@@ -72,6 +72,28 @@ The subscription string that Redis will receive will be `comments.added.graphql-
 This subscription string is much more specific and means the the filtering required for this type of subscription is not needed anymore.
 This is one step towards lifting the load off of the graphql api server regarding subscriptions.
 
+## Creating the Redis Client
+
+But for any production usage, it is recommended to send a redis client from outside.
+
+```javascript
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import * as Redis from 'ioredis';
+
+const options = {
+  host: REDIS_DOMAIN_NAME,
+  port: PORT_NUMBER,
+  retry_strategy: options => {
+    // reconnect after
+    return Math.max(options.attempt * 100, 3000);
+  }
+};
+
+const pubsub = new RedisPubSub({...}, new Redis(options), new Redis(options));
+```
+
+You can learn more on ioredis package [here](https://github.com/luin/ioredis).
+
 ## Passing redis options object
 
 The basic usage is great for development and you will be able to connect to a redis server running on your system seamlessly.
@@ -92,5 +114,5 @@ const pubsub = new RedisPubSub({
 });
 ```
 
-You can learn more on the redis options object [here](https://github.com/NodeRedis/node_redis#options-object-properties).
+You can learn more on the redis options object [here](https://github.com/luin/ioredis/blob/master/API.md#new_Redis_new).
 

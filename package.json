@@ -35,26 +35,29 @@
   },
   "dependencies": {
     "graphql-subscriptions": "^0.4.2",
-    "iterall": "^1.1.1",
-    "redis": "^2.6.3"
+    "iterall": "^1.1.1"
   },
   "devDependencies": {
     "@types/chai": "^4.0.1",
     "@types/chai-as-promised": "0.0.31",
     "@types/graphql": "^0.9.0",
+    "@types/ioredis": "0.0.24",
     "@types/mocha": "^2.2.33",
     "@types/node": "7.0.19",
-    "@types/redis": "^2.6.0",
     "@types/simple-mock": "0.0.27",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "graphql": "^0.10.1",
+    "ioredis": "^3.1.2",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^3.0.0",
     "remap-istanbul": "^0.9.5",
     "simple-mock": "^0.8.0",
     "tslint": "^5.2.0",
     "typescript": "^2.3.4"
+  },
+  "optionalDependencies": {
+    "ioredis": "^3.1.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

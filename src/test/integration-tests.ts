@@ -130,6 +130,7 @@ describe('SubscriptionManager', function () {
       subManager.publish('testSubscription', 'good');
       setTimeout(() => {
         subManager.unsubscribe(subId);
+        done();
       }, 2);
     });
   });

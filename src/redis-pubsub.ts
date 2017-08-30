@@ -84,19 +84,14 @@ export class RedisPubSub implements PubSubEngine {
 
     if (!refs) throw new Error(`There is no subscription of id "${subId}"`);
 
-    let newRefs;
     if (refs.length === 1) {
       this.redisSubscriber.unsubscribe(triggerName);
-      newRefs = [];
-
+      delete this.subsRefsMap[triggerName];
     } else {
       const index = refs.indexOf(subId);
-      if (index !== -1) {
-        newRefs = [...refs.slice(0, index), ...refs.slice(index + 1)];
-      }
+      const newRefs = index === -1 ? refs : [...refs.slice(0, index), ...refs.slice(index + 1)];
+      this.subsRefsMap[triggerName] = newRefs;
     }
-
-    this.subsRefsMap[triggerName] = newRefs;
     delete this.subscriptionMap[subId];
   }
 

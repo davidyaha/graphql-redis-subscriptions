@@ -76,14 +76,14 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     }
   }
 
-  private pullValue() {
-    return new Promise((resolve => {
+  private pullValue(): Promise<IteratorResult<any>> {
+    return new Promise(resolve => {
       if (this.pushQueue.length !== 0) {
         resolve({ value: this.pushQueue.shift(), done: false });
       } else {
         this.pullQueue.push(resolve);
       }
-    }).bind(this));
+    });
   }
 
   private emptyQueue(subscriptionIds: number[]) {

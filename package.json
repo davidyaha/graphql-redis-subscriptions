@@ -34,7 +34,7 @@
     "prepublish": "npm run test"
   },
   "dependencies": {
-    "graphql-subscriptions": "^0.4.2",
+    "graphql-subscriptions": "^0.5.0",
     "iterall": "^1.1.1"
   },
   "devDependencies": {

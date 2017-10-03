@@ -50,7 +50,7 @@
     "graphql": "^0.10.1",
     "ioredis": "^3.1.2",
     "istanbul": "1.0.0-alpha.2",
-    "mocha": "^3.0.0",
+    "mocha": "^4.0.0",
     "remap-istanbul": "^0.9.5",
     "simple-mock": "^0.8.0",
     "tslint": "^5.2.0",

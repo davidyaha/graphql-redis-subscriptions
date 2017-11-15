@@ -22,6 +22,16 @@ export class RedisPubSub implements PubSubEngine {
         const IORedis = require('ioredis');
         this.redisPublisher = new IORedis(options.connection);
         this.redisSubscriber = new IORedis(options.connection);
+
+        if (options.connectionListener) {
+          this.redisPublisher.on('connect', options.connectionListener);
+          this.redisPublisher.on('error', options.connectionListener);
+          this.redisSubscriber.on('connect', options.connectionListener);
+          this.redisSubscriber.on('error', options.connectionListener);
+        } else {
+          this.redisPublisher.on('error', console.error);
+          this.redisSubscriber.on('error', console.error);
+        }
       } catch (error) {
         console.error(`Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. 
         Couldn't create Redis clients.`)
@@ -31,16 +41,6 @@ export class RedisPubSub implements PubSubEngine {
 
     // TODO support for pattern based message
     this.redisSubscriber.on('message', this.onMessage.bind(this));
-
-    if (options.connectionListener) {
-      this.redisPublisher.on('connect', options.connectionListener);
-      this.redisPublisher.on('error', options.connectionListener);
-      this.redisSubscriber.on('connect', options.connectionListener);
-      this.redisSubscriber.on('error', options.connectionListener);
-    } else {
-      this.redisPublisher.on('error', console.error);
-      this.redisSubscriber.on('error', console.error);
-    }
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};

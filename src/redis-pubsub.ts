@@ -57,7 +57,7 @@ export class RedisPubSub implements PubSubEngine {
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
 
-    let refs = this.subsRefsMap[triggerName];
+    const refs = this.subsRefsMap[triggerName];
     if (refs && refs.length > 0) {
       const newRefs = [...refs, id];
       this.subsRefsMap[triggerName] = newRefs;

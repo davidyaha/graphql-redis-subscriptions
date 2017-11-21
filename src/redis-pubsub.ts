@@ -121,7 +121,7 @@ export class RedisPubSub implements PubSubEngine {
     }
 
     for (const subId of subscribers) {
-      const listener = this.subscriptionMap[subId][1];
+      const [, listener] = this.subscriptionMap[subId];
       listener(parsedMessage);
     }
   }

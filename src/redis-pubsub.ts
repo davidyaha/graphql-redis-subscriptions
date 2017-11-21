@@ -13,21 +13,24 @@ export interface PubSubRedisOptions {
 export class RedisPubSub implements PubSubEngine {
 
   constructor(options: PubSubRedisOptions = {}) {
-    this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
-    if (options.subscriber && options.publisher) {
-      this.redisPublisher = options.publisher;
-      this.redisSubscriber = options.subscriber;
+    const { triggerTransform, connection, connectionListener, subscriber, publisher } = options;
+
+    this.triggerTransform = triggerTransform || (trigger => trigger as string);
+
+    if (subscriber && publisher) {
+      this.redisPublisher = publisher;
+      this.redisSubscriber = subscriber;
     } else {
       try {
         const IORedis = require('ioredis');
-        this.redisPublisher = new IORedis(options.connection);
-        this.redisSubscriber = new IORedis(options.connection);
+        this.redisPublisher = new IORedis(connection);
+        this.redisSubscriber = new IORedis(connection);
 
-        if (options.connectionListener) {
-          this.redisPublisher.on('connect', options.connectionListener);
-          this.redisPublisher.on('error', options.connectionListener);
-          this.redisSubscriber.on('connect', options.connectionListener);
-          this.redisSubscriber.on('error', options.connectionListener);
+        if (connectionListener) {
+          this.redisPublisher.on('connect', connectionListener);
+          this.redisPublisher.on('error', connectionListener);
+          this.redisSubscriber.on('connect', connectionListener);
+          this.redisSubscriber.on('error', connectionListener);
         } else {
           this.redisPublisher.on('error', console.error);
           this.redisSubscriber.on('error', console.error);

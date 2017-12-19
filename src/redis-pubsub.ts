@@ -1,5 +1,5 @@
 import { RedisOptions, Redis as RedisClient } from 'ioredis';
-import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub-engine';
+import { PubSubEngine } from 'graphql-subscriptions';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
@@ -11,9 +11,14 @@ export interface PubSubRedisOptions {
 }
 
 export class RedisPubSub implements PubSubEngine {
-
   constructor(options: PubSubRedisOptions = {}) {
-    const { triggerTransform, connection, connectionListener, subscriber, publisher } = options;
+    const {
+      triggerTransform,
+      connection,
+      connectionListener,
+      subscriber,
+      publisher,
+    } = options;
 
     this.triggerTransform = triggerTransform || (trigger => trigger as string);
 
@@ -36,10 +41,10 @@ export class RedisPubSub implements PubSubEngine {
           this.redisSubscriber.on('error', console.error);
         }
       } catch (error) {
-        console.error(`Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. 
-        Couldn't create Redis clients.`)
+        console.error(
+          `Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. Couldn't create Redis clients.`,
+        );
       }
-
     }
 
     // TODO support for pattern based message
@@ -55,7 +60,11 @@ export class RedisPubSub implements PubSubEngine {
     return this.redisPublisher.publish(trigger, JSON.stringify(payload));
   }
 
-  public subscribe(trigger: string, onMessage: Function, options?: Object): Promise<number> {
+  public subscribe(
+    trigger: string,
+    onMessage: Function,
+    options?: Object,
+  ): Promise<number> {
     const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
@@ -65,7 +74,6 @@ export class RedisPubSub implements PubSubEngine {
       const newRefs = [...refs, id];
       this.subsRefsMap[triggerName] = newRefs;
       return Promise.resolve(id);
-
     } else {
       return new Promise<number>((resolve, reject) => {
         // TODO Support for pattern subs
@@ -73,7 +81,10 @@ export class RedisPubSub implements PubSubEngine {
           if (err) {
             reject(err);
           } else {
-            this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
+            this.subsRefsMap[triggerName] = [
+              ...(this.subsRefsMap[triggerName] || []),
+              id,
+            ];
             resolve(id);
           }
         });
@@ -92,7 +103,10 @@ export class RedisPubSub implements PubSubEngine {
       delete this.subsRefsMap[triggerName];
     } else {
       const index = refs.indexOf(subId);
-      const newRefs = index === -1 ? refs : [...refs.slice(0, index), ...refs.slice(index + 1)];
+      const newRefs =
+        index === -1
+          ? refs
+          : [...refs.slice(0, index), ...refs.slice(index + 1)];
       this.subsRefsMap[triggerName] = newRefs;
     }
     delete this.subscriptionMap[subId];
@@ -140,4 +154,7 @@ export class RedisPubSub implements PubSubEngine {
 
 export type Path = Array<string | number>;
 export type Trigger = string | Path;
-export type TriggerTransform = (trigger: Trigger, channelOptions?: Object) => string;
+export type TriggerTransform = (
+  trigger: Trigger,
+  channelOptions?: Object,
+) => string;

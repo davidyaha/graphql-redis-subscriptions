@@ -1,6 +1,6 @@
 {
   "name": "graphql-redis-subscriptions",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "A graphql-subscriptions PubSub Engine using redis",
   "main": "dist/index.js",
   "repository": {
@@ -34,27 +34,26 @@
     "prepublish": "npm run test"
   },
   "dependencies": {
-    "graphql-subscriptions": "^0.4.2",
-    "iterall": "^1.1.1"
+    "graphql-subscriptions": "^0.5.6",
+    "iterall": "^1.1.3"
   },
   "devDependencies": {
-    "@types/chai": "^4.0.1",
     "@types/chai-as-promised": "7.1.0",
-    "@types/graphql": "^0.9.0",
-    "@types/ioredis": "0.0.24",
-    "@types/mocha": "^2.2.33",
+    "@types/chai": "^4.0.10",,
+    "@types/ioredis": "0.0.26",
+    "@types/mocha": "^2.2.44",
     "@types/node": "7.0.19",
     "@types/simple-mock": "0.0.27",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "graphql": "^0.10.1",
+    "graphql": "^0.12.0",
     "ioredis": "^3.1.2",
     "istanbul": "1.0.0-alpha.2",
-    "mocha": "^3.0.0",
+    "mocha": "^3.5.3",
     "remap-istanbul": "^0.9.5",
     "simple-mock": "^0.8.0",
-    "tslint": "^5.2.0",
-    "typescript": "^2.3.4"
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.2"
   },
   "optionalDependencies": {
     "ioredis": "^3.1.2"

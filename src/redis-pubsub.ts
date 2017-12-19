@@ -1,33 +1,54 @@
-import {PubSubEngine} from 'graphql-subscriptions/dist/pubsub';
-import {createClient, RedisClient, ClientOpts as RedisOptions} from 'redis';
-import {each} from 'async';
+import { RedisOptions, Redis as RedisClient } from 'ioredis';
+import { PubSubEngine } from 'graphql-subscriptions';
+import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
+  publisher?: RedisClient;
+  subscriber?: RedisClient;
 }
 
 export class RedisPubSub implements PubSubEngine {
-
   constructor(options: PubSubRedisOptions = {}) {
-    this.triggerTransform = options.triggerTransform || (trigger => trigger as string);
+    const {
+      triggerTransform,
+      connection,
+      connectionListener,
+      subscriber,
+      publisher,
+    } = options;
 
-    this.redisPublisher = createClient(options.connection);
-    this.redisSubscriber = createClient(options.connection);
+    this.triggerTransform = triggerTransform || (trigger => trigger as string);
+
+    if (subscriber && publisher) {
+      this.redisPublisher = publisher;
+      this.redisSubscriber = subscriber;
+    } else {
+      try {
+        const IORedis = require('ioredis');
+        this.redisPublisher = new IORedis(connection);
+        this.redisSubscriber = new IORedis(connection);
+
+        if (connectionListener) {
+          this.redisPublisher.on('connect', connectionListener);
+          this.redisPublisher.on('error', connectionListener);
+          this.redisSubscriber.on('connect', connectionListener);
+          this.redisSubscriber.on('error', connectionListener);
+        } else {
+          this.redisPublisher.on('error', console.error);
+          this.redisSubscriber.on('error', console.error);
+        }
+      } catch (error) {
+        console.error(
+          `Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. Couldn't create Redis clients.`,
+        );
+      }
+    }
 
     // TODO support for pattern based message
     this.redisSubscriber.on('message', this.onMessage.bind(this));
-
-    if (options.connectionListener) {
-      this.redisPublisher.on('connect', options.connectionListener);
-      this.redisPublisher.on('error', options.connectionListener);
-      this.redisSubscriber.on('connect', options.connectionListener);
-      this.redisSubscriber.on('error', options.connectionListener);
-    } else {
-      this.redisPublisher.on('error', console.error);
-      this.redisSubscriber.on('error', console.error);
-    }
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
@@ -39,17 +60,20 @@ export class RedisPubSub implements PubSubEngine {
     return this.redisPublisher.publish(trigger, JSON.stringify(payload));
   }
 
-  public subscribe(trigger: string, onMessage: Function, options?: Object): Promise<number> {
+  public subscribe(
+    trigger: string,
+    onMessage: Function,
+    options?: Object,
+  ): Promise<number> {
     const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
 
-    let refs = this.subsRefsMap[triggerName];
+    const refs = this.subsRefsMap[triggerName];
     if (refs && refs.length > 0) {
       const newRefs = [...refs, id];
       this.subsRefsMap[triggerName] = newRefs;
       return Promise.resolve(id);
-
     } else {
       return new Promise<number>((resolve, reject) => {
         // TODO Support for pattern subs
@@ -57,7 +81,10 @@ export class RedisPubSub implements PubSubEngine {
           if (err) {
             reject(err);
           } else {
-            this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
+            this.subsRefsMap[triggerName] = [
+              ...(this.subsRefsMap[triggerName] || []),
+              id,
+            ];
             resolve(id);
           }
         });
@@ -71,20 +98,30 @@ export class RedisPubSub implements PubSubEngine {
 
     if (!refs) throw new Error(`There is no subscription of id "${subId}"`);
 
-    let newRefs;
     if (refs.length === 1) {
       this.redisSubscriber.unsubscribe(triggerName);
-      newRefs = [];
-
+      delete this.subsRefsMap[triggerName];
     } else {
       const index = refs.indexOf(subId);
-      if (index !== -1) {
-        newRefs = [...refs.slice(0, index), ...refs.slice(index + 1)];
-      }
+      const newRefs =
+        index === -1
+          ? refs
+          : [...refs.slice(0, index), ...refs.slice(index + 1)];
+      this.subsRefsMap[triggerName] = newRefs;
     }
-
-    this.subsRefsMap[triggerName] = newRefs;
     delete this.subscriptionMap[subId];
+  }
+
+  public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
+    return new PubSubAsyncIterator<T>(this, triggers);
+  }
+
+  public getSubscriber(): RedisClient {
+    return this.redisSubscriber;
+  }
+
+  public getPublisher(): RedisClient {
+    return this.redisPublisher;
   }
 
   private onMessage(channel: string, message: string) {
@@ -100,23 +137,24 @@ export class RedisPubSub implements PubSubEngine {
       parsedMessage = message;
     }
 
-    each(subscribers, (subId, cb) => {
-      // TODO Support pattern based subscriptions
-      const [triggerName, listener] = this.subscriptionMap[subId];
+    for (const subId of subscribers) {
+      const [, listener] = this.subscriptionMap[subId];
       listener(parsedMessage);
-      cb();
-    });
+    }
   }
 
   private triggerTransform: TriggerTransform;
   private redisSubscriber: RedisClient;
   private redisPublisher: RedisClient;
 
-  private subscriptionMap: {[subId: number]: [string , Function]};
-  private subsRefsMap: {[trigger: string]: Array<number>};
+  private subscriptionMap: { [subId: number]: [string, Function] };
+  private subsRefsMap: { [trigger: string]: Array<number> };
   private currentSubscriptionId: number;
 }
 
 export type Path = Array<string | number>;
 export type Trigger = string | Path;
-export type TriggerTransform = (trigger: Trigger, channelOptions?: Object) => string;
+export type TriggerTransform = (
+  trigger: Trigger,
+  channelOptions?: Object,
+) => string;

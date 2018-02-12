@@ -47,8 +47,7 @@ export class RedisPubSub implements PubSubEngine {
       }
     }
 
-    // TODO support for pattern based message
-    this.redisSubscriber.on('message', this.onMessage.bind(this));
+    this.redisSubscriber.on('pmessage', this.onMessage.bind(this));
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
@@ -76,8 +75,7 @@ export class RedisPubSub implements PubSubEngine {
       return Promise.resolve(id);
     } else {
       return new Promise<number>((resolve, reject) => {
-        // TODO Support for pattern subs
-        this.redisSubscriber.subscribe(triggerName, err => {
+        this.redisSubscriber.psubscribe(triggerName, err => {
           if (err) {
             reject(err);
           } else {
@@ -124,8 +122,8 @@ export class RedisPubSub implements PubSubEngine {
     return this.redisPublisher;
   }
 
-  private onMessage(channel: string, message: string) {
-    const subscribers = this.subsRefsMap[channel];
+  private onMessage(pattern: string, channel: string, message: string) {
+    const subscribers = this.subsRefsMap[pattern];
 
     // Don't work for nothing..
     if (!subscribers || !subscribers.length) return;

@@ -12,15 +12,15 @@ const expect = chai.expect;
 
 let listener;
 
-const publishSpy = spy((channel, message) => listener && listener(channel, message));
+const publishSpy = spy((channel, message) => listener && listener(channel, channel, message));
 const subscribeSpy = spy((channel, cb) => cb && cb(null, channel));
 const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
 const mockRedisClient = {
   publish: publishSpy,
-  subscribe: subscribeSpy,
+  psubscribe: subscribeSpy,
   unsubscribe: unsubscribeSpy,
   on: (event, cb) => {
-    if (event === 'message') {
+    if (event === 'pmessage') {
       listener = cb;
     }
   },

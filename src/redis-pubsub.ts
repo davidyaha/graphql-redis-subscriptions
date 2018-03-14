@@ -1,9 +1,9 @@
-import { RedisOptions, Redis as RedisClient } from 'ioredis';
-import { PubSubEngine } from 'graphql-subscriptions';
-import { PubSubAsyncIterator } from './pubsub-async-iterator';
+import { ClientOpts, RedisClient } from "redis";
+import { PubSubEngine } from "graphql-subscriptions";
+import { PubSubAsyncIterator } from "./pubsub-async-iterator";
 
 export interface PubSubRedisOptions {
-  connection?: RedisOptions;
+  connection?: ClientOpts;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
   publisher?: RedisClient;
@@ -17,7 +17,7 @@ export class RedisPubSub implements PubSubEngine {
       connection,
       connectionListener,
       subscriber,
-      publisher,
+      publisher
     } = options;
 
     this.triggerTransform = triggerTransform || (trigger => trigger as string);
@@ -27,28 +27,28 @@ export class RedisPubSub implements PubSubEngine {
       this.redisSubscriber = subscriber;
     } else {
       try {
-        const IORedis = require('ioredis');
-        this.redisPublisher = new IORedis(connection);
-        this.redisSubscriber = new IORedis(connection);
+        const Redis = require("redis");
+        this.redisPublisher = new Redis.createClient(connection);
+        this.redisSubscriber = new Redis.createClient(connection);
 
         if (connectionListener) {
-          this.redisPublisher.on('connect', connectionListener);
-          this.redisPublisher.on('error', connectionListener);
-          this.redisSubscriber.on('connect', connectionListener);
-          this.redisSubscriber.on('error', connectionListener);
+          this.redisPublisher.on("connect", connectionListener);
+          this.redisPublisher.on("error", connectionListener);
+          this.redisSubscriber.on("connect", connectionListener);
+          this.redisSubscriber.on("error", connectionListener);
         } else {
-          this.redisPublisher.on('error', console.error);
-          this.redisSubscriber.on('error', console.error);
+          this.redisPublisher.on("error", console.error);
+          this.redisSubscriber.on("error", console.error);
         }
       } catch (error) {
         console.error(
-          `Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. Couldn't create Redis clients.`,
+          `No publisher or subscriber instances were provided and the package 'redis' wasn't found. Couldn't create Redis clients.`
         );
       }
     }
 
     // TODO support for pattern based message
-    this.redisSubscriber.on('message', this.onMessage.bind(this));
+    this.redisSubscriber.on("message", this.onMessage.bind(this));
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
@@ -63,7 +63,7 @@ export class RedisPubSub implements PubSubEngine {
   public subscribe(
     trigger: string,
     onMessage: Function,
-    options?: Object,
+    options?: Object
   ): Promise<number> {
     const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
@@ -83,7 +83,7 @@ export class RedisPubSub implements PubSubEngine {
           } else {
             this.subsRefsMap[triggerName] = [
               ...(this.subsRefsMap[triggerName] || []),
-              id,
+              id
             ];
             resolve(id);
           }
@@ -156,5 +156,5 @@ export type Path = Array<string | number>;
 export type Trigger = string | Path;
 export type TriggerTransform = (
   trigger: Trigger,
-  channelOptions?: Object,
+  channelOptions?: Object
 ) => string;

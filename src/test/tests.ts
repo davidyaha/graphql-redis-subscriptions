@@ -3,7 +3,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { spy, restore } from 'simple-mock';
 import { isAsyncIterable } from 'iterall';
 import { RedisPubSub } from '../redis-pubsub';
-import * as IORedis from 'ioredis';
+import { RedisClient } from 'redis';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -36,10 +36,10 @@ const mockOptions = {
 
 describe('RedisPubSub', function () {
 
-  it('should create default ioredis clients if none were provided', function (done) {
+  it('should create default redis clients if none were provided', function (done) {
     const pubSub = new RedisPubSub();
-    expect(pubSub.getSubscriber()).to.be.an.instanceOf(IORedis);
-    expect(pubSub.getPublisher()).to.be.an.instanceOf(IORedis);
+    expect(pubSub.getSubscriber()).to.be.an.instanceOf(RedisClient);
+    expect(pubSub.getPublisher()).to.be.an.instanceOf(RedisClient);
     done();
   });
 

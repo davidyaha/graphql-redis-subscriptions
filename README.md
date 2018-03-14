@@ -92,7 +92,7 @@ For production usage, it is recommended to send a redis client from the using co
 
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';
-import * as Redis from 'ioredis';
+import { createClient } from 'redis';
 
 const options = {
   host: REDIS_DOMAIN_NAME,
@@ -105,12 +105,12 @@ const options = {
 
 const pubsub = new RedisPubSub({
   ...,
-  publisher: new Redis(options),
-  subscriber: new Redis(options)
+  publisher: createClient(options),
+  subscriber: createClient(options)
 });
 ```
 
-You can learn more on ioredis package [here](https://github.com/luin/ioredis).
+You can learn more on redis package [here](https://github.com/NodeRedis/node_redis).
 
 ## Passing redis options object
 

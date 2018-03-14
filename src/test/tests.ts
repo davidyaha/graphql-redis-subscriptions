@@ -201,6 +201,29 @@ describe('RedisPubSub', function () {
     });
   });
 
+  it('can publish and subscribe to native Date objects', done => {
+    const pubSub = new RedisPubSub(mockOptions);
+    const validTime = new Date();
+    const invalidTime = '2018-13-01T12:00:00Z';
+    pubSub.subscribe('Times', message => {
+      try {
+        expect(message).to.have.property('invalidTime', invalidTime);
+        expect(message).to.have.property('validTime');
+        expect(message.validTime.getTime()).to.equals(validTime.getTime());
+        done();
+      } catch (e) {
+        done(e);
+      }
+    }).then(subId => {
+      try {
+        pubSub.publish('Times', { validTime, invalidTime });
+        pubSub.unsubscribe(subId);
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
   it('throws if you try to unsubscribe with an unknown id', function () {
     const pubSub = new RedisPubSub(mockOptions);
     return expect(() => pubSub.unsubscribe(123))

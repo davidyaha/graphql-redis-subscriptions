@@ -1,6 +1,6 @@
-import { ClientOpts, RedisClient } from "redis";
-import { PubSubEngine } from "graphql-subscriptions";
-import { PubSubAsyncIterator } from "./pubsub-async-iterator";
+import { ClientOpts, RedisClient } from 'redis';
+import { PubSubEngine } from 'graphql-subscriptions';
+import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
   connection?: ClientOpts;
@@ -27,18 +27,18 @@ export class RedisPubSub implements PubSubEngine {
       this.redisSubscriber = subscriber;
     } else {
       try {
-        const Redis = require("redis");
-        this.redisPublisher = new Redis.createClient(connection);
-        this.redisSubscriber = new Redis.createClient(connection);
+        const { createClient } = require('redis');
+        this.redisPublisher = createClient(connection);
+        this.redisSubscriber = createClient(connection);
 
         if (connectionListener) {
-          this.redisPublisher.on("connect", connectionListener);
-          this.redisPublisher.on("error", connectionListener);
-          this.redisSubscriber.on("connect", connectionListener);
-          this.redisSubscriber.on("error", connectionListener);
+          this.redisPublisher.on('connect', connectionListener);
+          this.redisPublisher.on('error', connectionListener);
+          this.redisSubscriber.on('connect', connectionListener);
+          this.redisSubscriber.on('error', connectionListener);
         } else {
-          this.redisPublisher.on("error", console.error);
-          this.redisSubscriber.on("error", console.error);
+          this.redisPublisher.on('error', console.error);
+          this.redisSubscriber.on('error', console.error);
         }
       } catch (error) {
         console.error(
@@ -48,7 +48,7 @@ export class RedisPubSub implements PubSubEngine {
     }
 
     // TODO support for pattern based message
-    this.redisSubscriber.on("message", this.onMessage.bind(this));
+    this.redisSubscriber.on('message', this.onMessage.bind(this));
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
@@ -63,7 +63,7 @@ export class RedisPubSub implements PubSubEngine {
   public subscribe(
     trigger: string,
     onMessage: Function,
-    options?: Object
+    options?: Object,
   ): Promise<number> {
     const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
@@ -83,7 +83,7 @@ export class RedisPubSub implements PubSubEngine {
           } else {
             this.subsRefsMap[triggerName] = [
               ...(this.subsRefsMap[triggerName] || []),
-              id
+              id,
             ];
             resolve(id);
           }
@@ -124,6 +124,11 @@ export class RedisPubSub implements PubSubEngine {
     return this.redisPublisher;
   }
 
+  public close(): void {
+    this.redisPublisher.quit();
+    this.redisSubscriber.quit();
+  }
+
   private onMessage(channel: string, message: string) {
     const subscribers = this.subsRefsMap[channel];
 
@@ -156,5 +161,5 @@ export type Path = Array<string | number>;
 export type Trigger = string | Path;
 export type TriggerTransform = (
   trigger: Trigger,
-  channelOptions?: Object
+  channelOptions?: Object,
 ) => string;

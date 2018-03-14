@@ -24,14 +24,14 @@
     "pretest": "npm run compile",
     "test": "npm run testonly -- && npm run integration --",
     "posttest": "npm run lint",
-    "lint": "tslint --type-check --project ./tsconfig.json ./src/**/*.ts",
+    "lint": "tslint --project ./tsconfig.json ./src/**/*.ts",
     "watch": "tsc -w",
     "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js ",
     "integration": "npm run compile && mocha --reporter spec --full-trace ./dist/test/integration-tests.js ",
     "benchmark": "npm run compile && mocha --reporter spec --full-trace ./dist/test/benchmark.js ",
     "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
-    "prepublish": "npm run test"
+    "prepublishOnly": "npm run test"
   },
   "dependencies": {
     "graphql-subscriptions": "^0.5.8",
@@ -47,7 +47,7 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "graphql": "^0.13.1",
-    "istanbul": "1.0.0-alpha.2",
+    "istanbul": "1.1.0-alpha.1",
     "mocha": "^5.0.4",
     "redis": "^2.8.0",
     "remap-istanbul": "^0.10.1",

@@ -87,4 +87,6 @@ describe('PubSubAsyncIterator', function() {
       .then(res => {
         expect(returnSpy.callCount).to.be.gte(1);
       }));
+
+  after(() => pubsub.close());
 });

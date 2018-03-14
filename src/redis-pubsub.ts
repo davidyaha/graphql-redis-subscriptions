@@ -1,9 +1,9 @@
-import { RedisOptions, Redis as RedisClient } from 'ioredis';
+import { ClientOpts, RedisClient } from 'redis';
 import { PubSubEngine } from 'graphql-subscriptions';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRedisOptions {
-  connection?: RedisOptions;
+  connection?: ClientOpts;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
   publisher?: RedisClient;
@@ -17,7 +17,7 @@ export class RedisPubSub implements PubSubEngine {
       connection,
       connectionListener,
       subscriber,
-      publisher,
+      publisher
     } = options;
 
     this.triggerTransform = triggerTransform || (trigger => trigger as string);
@@ -27,9 +27,9 @@ export class RedisPubSub implements PubSubEngine {
       this.redisSubscriber = subscriber;
     } else {
       try {
-        const IORedis = require('ioredis');
-        this.redisPublisher = new IORedis(connection);
-        this.redisSubscriber = new IORedis(connection);
+        const { createClient } = require('redis');
+        this.redisPublisher = createClient(connection);
+        this.redisSubscriber = createClient(connection);
 
         if (connectionListener) {
           this.redisPublisher.on('connect', connectionListener);
@@ -42,7 +42,7 @@ export class RedisPubSub implements PubSubEngine {
         }
       } catch (error) {
         console.error(
-          `Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. Couldn't create Redis clients.`,
+          `No publisher or subscriber instances were provided and the package 'redis' wasn't found. Couldn't create Redis clients.`
         );
       }
     }
@@ -122,6 +122,11 @@ export class RedisPubSub implements PubSubEngine {
 
   public getPublisher(): RedisClient {
     return this.redisPublisher;
+  }
+
+  public close(): void {
+    this.redisPublisher.quit();
+    this.redisSubscriber.quit();
   }
 
   private onMessage(channel: string, message: string) {

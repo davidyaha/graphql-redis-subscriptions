@@ -201,8 +201,19 @@ describe('RedisPubSub', function () {
     });
   });
 
-  it('can publish and subscribe to native Date objects', done => {
-    const pubSub = new RedisPubSub(mockOptions);
+  it('can accept custom reviver option (eg. for Javascript Dates)', done => {
+    const dateReviver = (key, value) => {
+      const isISO8601Z = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/;
+      if (typeof value === 'string' && isISO8601Z.test(value)) {
+        const tempDateNumber = Date.parse(value);
+        if (!isNaN(tempDateNumber)) {
+          return new Date(tempDateNumber);
+        }
+      }
+      return value;
+    };
+
+    const pubSub = new RedisPubSub({...mockOptions, reviver: dateReviver});
     const validTime = new Date();
     const invalidTime = '2018-13-01T12:00:00Z';
     pubSub.subscribe('Times', message => {

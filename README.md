@@ -133,7 +133,38 @@ const pubsub = new RedisPubSub({
 ```
 
 You can learn more on the redis options object [here](https://github.com/luin/ioredis/blob/master/API.md#new_Redis_new).
-   
+
+## Using a custom reviver
+
+By default, Javascript objects are serialized using the `JSON.stringify` and `JSON.parse` methods.
+For handling custom objects, you may pass your own reviver function to `JSON.parse`.
+
+```javascript
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+
+const dateReviver = (key, value) => {
+  const isISO8601Z = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/;
+  if (typeof value === 'string' && isISO8601Z.test(value)) {
+    const tempDateNumber = Date.parse(value);
+    if (!isNaN(tempDateNumber)) {
+      return new Date(tempDateNumber);
+    }
+  }
+  return value;
+};
+
+const pubSub = new RedisPubSub({ ..., reviver: dateReviver });
+
+pubSub.publish('Test', {
+  validTime: new Date(),
+  invalidTime: '2018-13-01T12:00:00Z'
+});
+pubSub.subscribe('Test', message => {
+  message.validTime; // Javascript Date
+  message.invalidTime; // string
+});
+```
+
 ## Old Usage (Deprecated)
 
 ```javascript

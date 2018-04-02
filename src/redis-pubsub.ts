@@ -121,6 +121,8 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public asyncIterable<T>(triggers: string | string[]): AsyncIterable<T> {
+    // @ts-ignore: unfortunately the TypeScript type for $$asyncIterator doesn't work
+    // in place of Symbol.iterator
     return {
       [$$asyncIterator]: () => new PubSubAsyncIterator<T>(this, triggers),
     };

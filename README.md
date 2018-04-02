@@ -3,11 +3,11 @@
 [![Greenkeeper badge](https://badges.greenkeeper.io/davidyaha/graphql-redis-subscriptions.svg)](https://greenkeeper.io/)
 [![Build Status](https://travis-ci.org/davidyaha/graphql-redis-subscriptions.svg?branch=master)](https://travis-ci.org/davidyaha/graphql-redis-subscriptions)
 
-This package implements the PubSubEngine Interface from the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package and also the new AsyncIterator interface. 
+This package implements the PubSubEngine Interface from the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package and also the new AsyncIterable interface. 
 It allows you to connect your subscriptions manger to a redis Pub Sub mechanism to support 
 multiple subscription manager instances.
    
-## Using as AsyncIterator
+## Using as AsyncIterable
 
 Define your GraphQL schema with a `Subscription` type:
 
@@ -34,7 +34,7 @@ import { RedisPubSub } from 'graphql-redis-subscriptions';
 const pubsub = new RedisPubSub();
 ```
 
-Now, implement your Subscriptions type resolver, using the `pubsub.asyncIterator` to map the event you need:
+Now, implement your Subscriptions type resolver, using the `pubsub.asyncIterable` to map the event you need:
 
 ```javascript
 const SOMETHING_CHANGED_TOPIC = 'something_changed';
@@ -42,7 +42,7 @@ const SOMETHING_CHANGED_TOPIC = 'something_changed';
 export const resolvers = {
   Subscription: {
     somethingChanged: {
-      subscribe: () => pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC),
+      subscribe: () => pubsub.asyncIterable(SOMETHING_CHANGED_TOPIC),
     },
   },
 }
@@ -50,7 +50,7 @@ export const resolvers = {
 
 > Subscriptions resolvers are not a function, but an object with `subscribe` method, that returns `AsyncIterable`.
 
-Calling the method `asyncIterator` of the `RedisPubSub` instance will send redis a `SUBSCRIBE` message to the topic provided and will return an `AsyncIterator` binded to the RedisPubSub instance and listens to any event published on that topic.
+Calling the method `asyncIterable` of the `RedisPubSub` instance will send redis a `SUBSCRIBE` message to the topic provided and will return an `AsyncIterable` binded to the RedisPubSub instance and listens to any event published on that topic.
 Now, the GraphQL engine knows that `somethingChanged` is a subscription, and every time we will use `pubsub.publish` over this topic, the `RedisPubSub` will `PUBLISH` the event over redis to all other subscribed instances and those in their turn will emit the event to GraphQL using the `next` callback given by the GraphQL engine.
 
 ```js
@@ -63,7 +63,7 @@ pubsub.publish(SOMETHING_CHANGED_TOPIC, { somethingChanged: { id: "123" }});
 export const resolvers = {
   Subscription: {
     somethingChanged: {
-      subscribe: (_, args) => pubsub.asyncIterator(`${SOMETHING_CHANGED_TOPIC}.${args.relevantId}`),
+      subscribe: (_, args) => pubsub.asyncIterable(`${SOMETHING_CHANGED_TOPIC}.${args.relevantId}`),
     },
   },
 }
@@ -78,7 +78,7 @@ export const resolvers = {
   Subscription: {
     somethingChanged: {
       subscribe: withFilter(
-        (_, args) => pubsub.asyncIterator(`${SOMETHING_CHANGED_TOPIC}.${args.relevantId}`),
+        (_, args) => pubsub.asyncIterable(`${SOMETHING_CHANGED_TOPIC}.${args.relevantId}`),
         (payload, variables) => payload.somethingChanged.id === variables.relevantId,
       ),
     },

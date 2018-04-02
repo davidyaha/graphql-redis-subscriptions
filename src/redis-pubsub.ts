@@ -1,3 +1,4 @@
+import { $$asyncIterator } from 'iterall';
 import { RedisOptions, Redis as RedisClient } from 'ioredis';
 import { PubSubEngine } from 'graphql-subscriptions';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
@@ -117,6 +118,12 @@ export class RedisPubSub implements PubSubEngine {
 
   public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
     return new PubSubAsyncIterator<T>(this, triggers);
+  }
+
+  public asyncIterable<T>(triggers: string | string[]): AsyncIterable<T> {
+    return {
+      [$$asyncIterator]: () => new PubSubAsyncIterator<T>(this, triggers),
+    };
   }
 
   public getSubscriber(): RedisClient {

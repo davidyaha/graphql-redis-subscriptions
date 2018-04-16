@@ -45,7 +45,7 @@ export class RedisPubSub implements PubSubEngine {
         }
       } catch (error) {
         console.error(
-          `Nor publisher or subscriber instances were provided and the package 'ioredis' wasn't found. Couldn't create Redis clients.`,
+          `No publisher or subscriber instances were provided and the package 'ioredis' wasn't found. Couldn't create Redis clients.`,
         );
       }
     }
@@ -125,6 +125,11 @@ export class RedisPubSub implements PubSubEngine {
 
   public getPublisher(): RedisClient {
     return this.redisPublisher;
+  }
+
+  public close(): void {
+    this.redisPublisher.quit();
+    this.redisSubscriber.quit();
   }
 
   private onMessage(channel: string, message: string) {

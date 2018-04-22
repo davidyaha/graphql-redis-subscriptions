@@ -15,6 +15,7 @@ let listener;
 const publishSpy = spy((channel, message) => listener && listener(channel, message));
 const subscribeSpy = spy((channel, cb) => cb && cb(null, channel));
 const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
+const quitSpy = spy(cb => cb);
 const mockRedisClient = {
   publish: publishSpy,
   subscribe: subscribeSpy,
@@ -24,6 +25,7 @@ const mockRedisClient = {
       listener = cb;
     }
   },
+  quit: quitSpy,
 };
 const mockOptions = {
   publisher: (mockRedisClient as any),
@@ -41,6 +43,13 @@ describe('RedisPubSub', () => {
     expect(pubSub.getSubscriber()).to.be.an.instanceOf(IORedis);
     expect(pubSub.getPublisher()).to.be.an.instanceOf(IORedis);
     pubSub.close();
+    done();
+  });
+
+  it('should verify close calls pub and sub quit methods', done => {
+    const pubSub = new RedisPubSub(mockOptions);
+    pubSub.close();
+    expect(quitSpy.callCount).to.equal(2);
     done();
   });
 

@@ -15,6 +15,7 @@ let listener;
 const publishSpy = spy((channel, message) => listener && listener(channel, message));
 const subscribeSpy = spy((channel, cb) => cb && cb(null, channel));
 const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
+const quitSpy = spy(cb => cb);
 const mockRedisClient = {
   publish: publishSpy,
   subscribe: subscribeSpy,
@@ -24,6 +25,7 @@ const mockRedisClient = {
       listener = cb;
     }
   },
+  quit: quitSpy,
 };
 const mockOptions = {
   publisher: (mockRedisClient as any),
@@ -34,16 +36,24 @@ const mockOptions = {
 
 // -------------- Mocking Redis Client ------------------
 
-describe('RedisPubSub', function () {
+describe('RedisPubSub', () => {
 
-  it('should create default ioredis clients if none were provided', function (done) {
+  it('should create default ioredis clients if none were provided', done => {
     const pubSub = new RedisPubSub();
     expect(pubSub.getSubscriber()).to.be.an.instanceOf(IORedis);
     expect(pubSub.getPublisher()).to.be.an.instanceOf(IORedis);
+    pubSub.close();
     done();
   });
 
-  it('can subscribe to specific redis channel and called when a message is published on it', function (done) {
+  it('should verify close calls pub and sub quit methods', done => {
+    const pubSub = new RedisPubSub(mockOptions);
+    pubSub.close();
+    expect(quitSpy.callCount).to.equal(2);
+    done();
+  });
+
+  it('can subscribe to specific redis channel and called when a message is published on it', done => {
     const pubSub = new RedisPubSub(mockOptions);
     pubSub.subscribe('Posts', message => {
       try {
@@ -60,7 +70,7 @@ describe('RedisPubSub', function () {
     });
   });
 
-  it('can unsubscribe from specific redis channel', function (done) {
+  it('can unsubscribe from specific redis channel', done => {
     const pubSub = new RedisPubSub(mockOptions);
     pubSub.subscribe('Posts', () => null).then(subId => {
       pubSub.unsubscribe(subId);
@@ -77,7 +87,7 @@ describe('RedisPubSub', function () {
     });
   });
 
-  it('cleans up correctly the memory when unsubscribing', function (done) {
+  it('cleans up correctly the memory when unsubscribing', done => {
     const pubSub = new RedisPubSub(mockOptions);
     Promise.all([
       pubSub.subscribe('Posts', () => null),
@@ -100,7 +110,7 @@ describe('RedisPubSub', function () {
       });
   });
 
-  it('will not unsubscribe from the redis channel if there is another subscriber on it\'s subscriber list', function (done) {
+  it('will not unsubscribe from the redis channel if there is another subscriber on it\'s subscriber list', done => {
     const pubSub = new RedisPubSub(mockOptions);
     const subscriptionPromises = [
       pubSub.subscribe('Posts', () => {
@@ -132,7 +142,7 @@ describe('RedisPubSub', function () {
     });
   });
 
-  it('will subscribe to redis channel only once', function (done) {
+  it('will subscribe to redis channel only once', done => {
     const pubSub = new RedisPubSub(mockOptions);
     const onMessage = () => null;
     const subscriptionPromises = [
@@ -154,7 +164,7 @@ describe('RedisPubSub', function () {
     });
   });
 
-  it('can have multiple subscribers and all will be called when a message is published to this channel', function (done) {
+  it('can have multiple subscribers and all will be called when a message is published to this channel', done => {
     const pubSub = new RedisPubSub(mockOptions);
     const onMessageSpy = spy(() => null);
     const subscriptionPromises = [
@@ -182,7 +192,7 @@ describe('RedisPubSub', function () {
     });
   });
 
-  it('can publish objects as well', function (done) {
+  it('can publish objects as well', done => {
     const pubSub = new RedisPubSub(mockOptions);
     pubSub.subscribe('Posts', message => {
       try {
@@ -235,13 +245,13 @@ describe('RedisPubSub', function () {
     });
   });
 
-  it('throws if you try to unsubscribe with an unknown id', function () {
+  it('throws if you try to unsubscribe with an unknown id', () => {
     const pubSub = new RedisPubSub(mockOptions);
     return expect(() => pubSub.unsubscribe(123))
       .to.throw('There is no subscription of id "123"');
   });
 
-  it('can use transform function to convert the trigger name given into more explicit channel name', function (done) {
+  it('can use transform function to convert the trigger name given into more explicit channel name', done => {
     const triggerTransform = (trigger, { repoName }) => `${trigger}.${repoName}`;
     const pubSub = new RedisPubSub({
       triggerTransform,
@@ -279,7 +289,7 @@ describe('RedisPubSub', function () {
 
 });
 
-describe('PubSubAsyncIterator', function () {
+describe('PubSubAsyncIterator', () => {
 
   it('should expose valid asyncItrator for a specific event', () => {
     const pubSub = new RedisPubSub(mockOptions);

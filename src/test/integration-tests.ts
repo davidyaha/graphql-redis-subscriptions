@@ -59,6 +59,10 @@ describe('PubSubAsyncIterator', function() {
   const schema = buildSchema(origIterator);
   const results = subscribe(schema, query);
 
+  after(() => {
+    pubsub.close();
+  });
+
   it('should allow subscriptions', () =>
     results
       .then(ai => {

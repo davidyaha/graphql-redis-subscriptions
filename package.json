@@ -43,7 +43,7 @@
     "@types/ioredis": "0.0.26",
     "@types/mocha": "^2.2.44",
     "@types/node": "7.0.19",
-    "@types/simple-mock": "0.0.27",
+    "@types/simple-mock": "0.8.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^7.1.1",
     "graphql": "^0.13.0",

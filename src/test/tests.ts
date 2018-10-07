@@ -63,9 +63,9 @@ describe('RedisPubSub', () => {
         done(e);
       }
 
-    }).then(subId => {
+    }).then(async subId => {
       expect(subId).to.be.a('number');
-      pubSub.publish('Posts', 'test');
+      await pubSub.publish('Posts', 'test');
       pubSub.unsubscribe(subId);
     });
   });
@@ -126,14 +126,14 @@ describe('RedisPubSub', () => {
       }),
     ];
 
-    Promise.all(subscriptionPromises).then(subIds => {
+    Promise.all(subscriptionPromises).then(async subIds => {
       try {
         expect(subIds.length).to.equals(2);
 
         pubSub.unsubscribe(subIds[0]);
         expect(unsubscribeSpy.callCount).to.equals(0);
 
-        pubSub.publish('Posts', 'test');
+        await pubSub.publish('Posts', 'test');
         pubSub.unsubscribe(subIds[1]);
         expect(unsubscribeSpy.callCount).to.equals(1);
       } catch (e) {
@@ -172,11 +172,11 @@ describe('RedisPubSub', () => {
       pubSub.subscribe('Posts', onMessageSpy as Function),
     ];
 
-    Promise.all(subscriptionPromises).then(subIds => {
+    Promise.all(subscriptionPromises).then(async subIds => {
       try {
         expect(subIds.length).to.equals(2);
 
-        pubSub.publish('Posts', 'test');
+        await pubSub.publish('Posts', 'test');
 
         expect(onMessageSpy.callCount).to.equals(2);
         onMessageSpy.calls.forEach(call => {
@@ -201,9 +201,9 @@ describe('RedisPubSub', () => {
       } catch (e) {
         done(e);
       }
-    }).then(subId => {
+    }).then(async subId => {
       try {
-        pubSub.publish('Posts', { comment: 'This is amazing' });
+        await pubSub.publish('Posts', { comment: 'This is amazing' });
         pubSub.unsubscribe(subId);
       } catch (e) {
         done(e);
@@ -235,9 +235,9 @@ describe('RedisPubSub', () => {
       } catch (e) {
         done(e);
       }
-    }).then(subId => {
+    }).then(async subId => {
       try {
-        pubSub.publish('Times', { validTime, invalidTime });
+        await pubSub.publish('Times', { validTime, invalidTime });
         pubSub.unsubscribe(subId);
       } catch (e) {
         done(e);
@@ -268,8 +268,8 @@ describe('RedisPubSub', () => {
       }
     };
 
-    pubSub.subscribe('comments', validateMessage, { repoName: 'graphql-redis-subscriptions' }).then(subId => {
-      pubSub.publish('comments.graphql-redis-subscriptions', 'test');
+    pubSub.subscribe('comments', validateMessage, { repoName: 'graphql-redis-subscriptions' }).then(async subId => {
+      await pubSub.publish('comments.graphql-redis-subscriptions', 'test');
       pubSub.unsubscribe(subId);
     });
 
@@ -319,14 +319,14 @@ describe('PubSubAsyncIterator', () => {
     pubSub.publish(eventName, { test: true });
   });
 
-  it('should not trigger event on asyncIterator when publishing other event', () => {
+  it('should not trigger event on asyncIterator when publishing other event', async () => {
     const pubSub = new RedisPubSub(mockOptions);
     const eventName = 'test2';
     const iterator = pubSub.asyncIterator('test');
     const triggerSpy = spy(() => undefined);
 
     iterator.next().then(triggerSpy);
-    pubSub.publish(eventName, { test: true });
+    await pubSub.publish(eventName, { test: true });
     expect(triggerSpy.callCount).to.equal(0);
   });
 
@@ -359,20 +359,20 @@ describe('PubSubAsyncIterator', () => {
       expect(result.done).to.be.false;
     });
 
-    pubSub.publish(eventName, { test: 'word' });
+    pubSub.publish(eventName, { test: 'word' }).then(() => {
+      iterator.next().then(result => {
+        // tslint:disable-next-line:no-unused-expression
+        expect(result).to.exist;
+        // tslint:disable-next-line:no-unused-expression
+        expect(result.value).not.to.exist;
+        // tslint:disable-next-line:no-unused-expression
+        expect(result.done).to.be.true;
+        done();
+      });
 
-    iterator.next().then(result => {
-      // tslint:disable-next-line:no-unused-expression
-      expect(result).to.exist;
-      // tslint:disable-next-line:no-unused-expression
-      expect(result.value).not.to.exist;
-      // tslint:disable-next-line:no-unused-expression
-      expect(result.done).to.be.true;
-      done();
+      iterator.return();
+      pubSub.publish(eventName, { test: true });
     });
-
-    iterator.return();
-    pubSub.publish(eventName, { test: true });
   });
 
 });

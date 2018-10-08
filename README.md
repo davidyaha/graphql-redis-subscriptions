@@ -6,6 +6,17 @@
 This package implements the PubSubEngine Interface from the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package and also the new AsyncIterator interface. 
 It allows you to connect your subscriptions manger to a redis Pub Sub mechanism to support 
 multiple subscription manager instances.
+
+## Installation
+At first, install the `graphql-redis-subscriptions` package: 
+```
+npm install graphql-redis-subscriptions
+```
+
+As the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package is declared as a peer dependency, you might receive warning about unmet peer dependency if it's not installed already by one of your other packages. In that case you also need to install it too:
+```
+npm install graphql-subscriptions
+```
    
 ## Using as AsyncIterator
 

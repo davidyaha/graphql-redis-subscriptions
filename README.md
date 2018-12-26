@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/davidyaha/graphql-redis-subscriptions.svg?branch=master)](https://travis-ci.org/davidyaha/graphql-redis-subscriptions)
 
 This package implements the PubSubEngine Interface from the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package and also the new AsyncIterator interface. 
-It allows you to connect your subscriptions manger to a redis Pub Sub mechanism to support 
+It allows you to connect your subscriptions manager to a Redis Pub Sub mechanism to support 
 multiple subscription manager instances.
 
 ## Installation
@@ -13,7 +13,7 @@ At first, install the `graphql-redis-subscriptions` package:
 npm install graphql-redis-subscriptions
 ```
 
-As the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package is declared as a peer dependency, you might receive warning about unmet peer dependency if it's not installed already by one of your other packages. In that case you also need to install it too:
+As the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package is declared as a peer dependency, you might receive warning about an unmet peer dependency if it's not installed already by one of your other packages. In that case you also need to install it too:
 ```
 npm install graphql-subscriptions
 ```
@@ -99,7 +99,7 @@ export const resolvers = {
 
 ## Creating the Redis Client
 
-For production usage, it is recommended to send a redis client from the using code.
+For production usage, it is recommended to send a Redis client from the using code.
 
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -121,12 +121,12 @@ const pubsub = new RedisPubSub({
 });
 ```
 
-You can learn more on ioredis package [here](https://github.com/luin/ioredis).
+You can learn more on the `ioredis` package [here](https://github.com/luin/ioredis).
 
 ## Passing redis options object
 
-The basic usage is great for development and you will be able to connect to a redis server running on your system seamlessly.
-But for any production usage you should probably pass in a redis options object
+The basic usage is great for development and you will be able to connect to a Redis server running on your system seamlessly.
+But for any production usage you should probably pass in a redis options object.
  
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -193,9 +193,9 @@ const subscriptionManager = new SubscriptionManager({
 Recently, graphql-subscriptions package added a way to pass in options to each call of subscribe.
 Those options are constructed via the setupFunctions object you provide the Subscription Manager constructor.
 The reason for graphql-subscriptions to add that feature is to allow pub sub engines a way to reduce their subscription set using the best method of said engine.
-For example, meteor's live query could use mongo selector with arguments passed from the subscription like the subscribed entity id.
-For redis, this could be a bit more simplified, but much more generic.
-The standard for redis subscriptions is to use dot notations to make the subscription more specific.
+For example, Meteor's live query could use Mongo selector with arguments passed from the subscription like the subscribed entity id.
+For Redis, this could be a bit more simplified, but much more generic.
+The standard for Redis subscriptions is to use dot notations to make the subscription more specific.
 This is only the standard but I would like to present an example of creating a specific subscription using the channel options feature.
 
 First I create a simple and generic trigger transform 
@@ -238,5 +238,5 @@ subscriptionManager.subscribe({query, operationName: 'X', variables, callback});
 
 The subscription string that Redis will receive will be `comments.added.graphql-redis-subscriptions`.
 This subscription string is much more specific and means the the filtering required for this type of subscription is not needed anymore.
-This is one step towards lifting the load off of the graphql api server regarding subscriptions.
+This is one step towards lifting the load off of the GraphQL API server regarding subscriptions.
 

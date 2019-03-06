@@ -56,7 +56,7 @@
     "chai-as-promised": "^7.1.1",
     "graphql": "^14.1.1",
     "graphql-subscriptions": "^1.0.0",
-    "ioredis": "^4.3.0",
+    "ioredis": "^4.6.3",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^5.2.0",
     "remap-istanbul": "^0.12.0",
@@ -65,7 +65,7 @@
     "typescript": "^3.1.1"
   },
   "optionalDependencies": {
-    "ioredis": "^4.3.0"
+    "ioredis": "^4.6.3"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

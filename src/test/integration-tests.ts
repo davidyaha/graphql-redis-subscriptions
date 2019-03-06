@@ -1,12 +1,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { mock } from 'simple-mock';
-import {
-  parse,
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-} from 'graphql';
+import { parse, GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 import { isAsyncIterable } from 'iterall';
 import { subscribe } from 'graphql/subscription';
 
@@ -73,6 +68,11 @@ describe('PubSubAsyncIterator', function() {
   const origPatternIterator = pubsub.asyncIterator('SECOND*', { pattern: true });
   const returnSpy = mock(origIterator, 'return');
   const schema = buildSchema(origIterator, origPatternIterator);
+
+  before(() => {
+    // Warm the redis connection so that tests would pass
+    pubsub.publish('WARM_UP', {});
+  });
 
   after(() => {
     pubsub.close();

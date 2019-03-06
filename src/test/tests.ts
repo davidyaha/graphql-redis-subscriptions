@@ -15,11 +15,16 @@ let listener;
 const publishSpy = spy((channel, message) => listener && listener(channel, message));
 const subscribeSpy = spy((channel, cb) => cb && cb(null, channel));
 const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
+const psubscribeSpy = spy((channel, cb) => cb && cb(null, channel));
+const punsubscribeSpy = spy((channel, cb) => cb && cb(channel));
+
 const quitSpy = spy(cb => cb);
 const mockRedisClient = {
   publish: publishSpy,
   subscribe: subscribeSpy,
   unsubscribe: unsubscribeSpy,
+  psubscribe: psubscribeSpy,
+  punsubscribe: punsubscribeSpy,
   on: (event, cb) => {
     if (event === 'message') {
       listener = cb;
@@ -70,15 +75,37 @@ describe('RedisPubSub', () => {
     });
   });
 
+  it('can subscribe to a redis channel pattern and called when a message is published on it', done => {
+    const pubSub = new RedisPubSub(mockOptions);
+
+    pubSub.subscribe('Posts*', message => {
+      try {
+        expect(psubscribeSpy.callCount).to.equal(1);
+        expect(message).to.equals('test');
+        done();
+      } catch (e) {
+        done(e);
+      }
+    }, { pattern: true }).then(async subId => {
+      expect(subId).to.be.a('number');
+      await pubSub.publish('Posts*', 'test');
+      pubSub.unsubscribe(subId);
+    });
+  });
+
   it('can unsubscribe from specific redis channel', done => {
     const pubSub = new RedisPubSub(mockOptions);
     pubSub.subscribe('Posts', () => null).then(subId => {
       pubSub.unsubscribe(subId);
 
       try {
+
         expect(unsubscribeSpy.callCount).to.equals(1);
-        const call = unsubscribeSpy.lastCall;
-        expect(call.args).to.have.members(['Posts']);
+        expect(unsubscribeSpy.lastCall.args).to.have.members(['Posts']);
+
+        expect(punsubscribeSpy.callCount).to.equals(1);
+        expect(punsubscribeSpy.lastCall.args).to.have.members(['Posts']);
+
         done();
 
       } catch (e) {
@@ -281,6 +308,8 @@ describe('RedisPubSub', () => {
     publishSpy.reset();
     subscribeSpy.reset();
     unsubscribeSpy.reset();
+    psubscribeSpy.reset();
+    punsubscribeSpy.reset();
   });
 
   after('Restore redis client', () => {

@@ -99,7 +99,7 @@ export const resolvers = {
 
 ## Creating the Redis Client
 
-For production usage, it is recommended to send a Redis client from the using code.
+The basic usage is great for development and you will be able to connect to a Redis server running on your system seamlessly. For production usage, it is recommended to send a Redis client from the using code and pass in any options you would like to use. e.g: Connection retry strategy.
 
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -122,28 +122,6 @@ const pubsub = new RedisPubSub({
 ```
 
 You can learn more on the `ioredis` package [here](https://github.com/luin/ioredis).
-
-## Passing redis options object
-
-The basic usage is great for development and you will be able to connect to a Redis server running on your system seamlessly.
-But for any production usage you should probably pass in a redis options object.
- 
-```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
-
-const pubsub = new RedisPubSub({
-  connection: {
-    host: REDIS_DOMAIN_NAME,
-    port: PORT_NUMBER,
-    retry_strategy: options => {
-      // reconnect after
-      return Math.max(options.attempt * 100, 3000);
-    }
-  }
-});
-```
-
-You can learn more on the redis options object [here](https://github.com/luin/ioredis/blob/master/API.md#new_Redis_new).
 
 ## Using a custom reviver
 

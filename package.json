@@ -58,7 +58,7 @@
     "graphql-subscriptions": "^1.0.0",
     "ioredis": "^4.6.3",
     "istanbul": "1.0.0-alpha.2",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.3",
     "remap-istanbul": "^0.12.0",
     "simple-mock": "^0.8.0",
     "tslint": "^5.8.0",

@@ -108,9 +108,9 @@ import * as Redis from 'ioredis';
 const options = {
   host: REDIS_DOMAIN_NAME,
   port: PORT_NUMBER,
-  retry_strategy: options => {
+  retryStrategy: times => {
     // reconnect after
-    return Math.max(options.attempt * 100, 3000);
+    return Math.min(times * 50, 2000);
   }
 };
 

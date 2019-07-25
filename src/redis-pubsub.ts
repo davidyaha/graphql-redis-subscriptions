@@ -60,7 +60,7 @@ export class RedisPubSub implements PubSubEngine {
     this.currentSubscriptionId = 0;
   }
 
-  public async publish(trigger: string, payload: any): Promise<void> {
+  public async publish<T>(trigger: string, payload: T): Promise<void> {
     await this.redisPublisher.publish(trigger, JSON.stringify(payload));
   }
 

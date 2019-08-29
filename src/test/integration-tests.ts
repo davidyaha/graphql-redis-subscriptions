@@ -1,7 +1,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { mock } from 'simple-mock';
-import { parse, GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
+import { parse, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLFieldResolver } from 'graphql';
 import { isAsyncIterable } from 'iterall';
 import { subscribe } from 'graphql/subscription';
 
@@ -32,7 +32,7 @@ function buildSchema(iterator, patternIterator) {
       fields: {
         testSubscription: {
           type: GraphQLString,
-          subscribe: withFilter(() => iterator, () => true),
+          subscribe: withFilter(() => iterator, () => true) as GraphQLFieldResolver<any, any, any>,
           resolve: root => {
             return 'FIRST_EVENT';
           },
@@ -40,7 +40,7 @@ function buildSchema(iterator, patternIterator) {
 
         testPatternSubscription: {
           type: GraphQLString,
-          subscribe: withFilter(() => patternIterator, () => true),
+          subscribe: withFilter(() => patternIterator, () => true) as GraphQLFieldResolver<any, any, any>,
           resolve: root => {
             return 'SECOND_EVENT';
           },
@@ -84,7 +84,7 @@ describe('PubSubAsyncIterator', function() {
         // tslint:disable-next-line:no-unused-expression
         expect(isAsyncIterable(ai)).to.be.true;
 
-        const r = ai.next();
+        const r = (ai as AsyncIterator<any>).next();
         pubsub.publish(FIRST_EVENT, {});
 
         return r;
@@ -99,7 +99,7 @@ describe('PubSubAsyncIterator', function() {
         // tslint:disable-next-line:no-unused-expression
         expect(isAsyncIterable(ai)).to.be.true;
 
-        const r = ai.next();
+        const r = (ai as AsyncIterator<any>).next();
         pubsub.publish(SECOND_EVENT, {});
 
         return r;
@@ -116,7 +116,7 @@ describe('PubSubAsyncIterator', function() {
 
         pubsub.publish(FIRST_EVENT, {});
 
-        return ai.return();
+        return (ai as AsyncIterator<any>).return();
       })
       .then(res => {
         expect(returnSpy.callCount).to.be.gte(1);

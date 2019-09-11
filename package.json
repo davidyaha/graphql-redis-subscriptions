@@ -50,7 +50,7 @@
     "@types/ioredis": "4.0.16",
     "@types/chai-as-promised": "7.1.1",
     "@types/mocha": "^5.2.5",
-    "@types/node": "12.7.4",
+    "@types/node": "12.7.5",
     "@types/simple-mock": "0.8.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",

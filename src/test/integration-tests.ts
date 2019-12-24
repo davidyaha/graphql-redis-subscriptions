@@ -85,7 +85,7 @@ describe('PubSubAsyncIterator', function() {
         expect(isAsyncIterable(ai)).to.be.true;
 
         const r = (ai as AsyncIterator<any>).next();
-        pubsub.publish(FIRST_EVENT, {});
+        setTimeout(() => pubsub.publish(FIRST_EVENT, {}), 50);
 
         return r;
       })
@@ -100,7 +100,7 @@ describe('PubSubAsyncIterator', function() {
         expect(isAsyncIterable(ai)).to.be.true;
 
         const r = (ai as AsyncIterator<any>).next();
-        pubsub.publish(SECOND_EVENT, {});
+        setTimeout(() => pubsub.publish(SECOND_EVENT, {}), 50);
 
         return r;
       })

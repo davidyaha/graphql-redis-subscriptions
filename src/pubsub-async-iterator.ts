@@ -39,21 +39,20 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     this.pushQueue = [];
     this.listening = true;
     this.eventsArray = typeof eventNames === 'string' ? [eventNames] : eventNames;
-    this.allSubscribed = this.subscribeAll();
   }
 
   public async next() {
-    await this.allSubscribed;
+    await this.subscribeAll();
     return this.listening ? this.pullValue() : this.return();
   }
 
   public async return() {
-    this.emptyQueue(await this.allSubscribed);
+    await this.emptyQueue();
     return { value: undefined, done: true };
   }
 
   public async throw(error) {
-    this.emptyQueue(await this.allSubscribed);
+    await this.emptyQueue();
     return Promise.reject(error);
   }
 
@@ -64,13 +63,13 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   private pullQueue: Function[];
   private pushQueue: any[];
   private eventsArray: string[];
-  private allSubscribed: Promise<number[]>;
+  private subscriptionIds: Promise<number[]> | undefined;
   private listening: boolean;
   private pubsub: PubSubEngine;
   private options: Object;
 
   private async pushValue(event) {
-    await this.allSubscribed;
+    await this.subscribeAll();
     if (this.pullQueue.length !== 0) {
       this.pullQueue.shift()({ value: event, done: false });
     } else {
@@ -88,10 +87,10 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     });
   }
 
-  private emptyQueue(subscriptionIds: number[]) {
+  private async emptyQueue() {
     if (this.listening) {
       this.listening = false;
-      this.unsubscribeAll(subscriptionIds);
+      if (this.subscriptionIds) this.unsubscribeAll(await this.subscriptionIds);
       this.pullQueue.forEach(resolve => resolve({ value: undefined, done: true }));
       this.pullQueue.length = 0;
       this.pushQueue.length = 0;
@@ -99,9 +98,12 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   }
 
   private subscribeAll() {
-    return Promise.all(this.eventsArray.map(
-      eventName => this.pubsub.subscribe(eventName, this.pushValue.bind(this), this.options),
-    ));
+    if (!this.subscriptionIds) {
+      this.subscriptionIds = Promise.all(this.eventsArray.map(
+        eventName => this.pubsub.subscribe(eventName, this.pushValue.bind(this), this.options),
+      ));
+    }
+    return this.subscriptionIds
   }
 
   private unsubscribeAll(subscriptionIds: number[]) {

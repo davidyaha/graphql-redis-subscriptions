@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { spy, restore } from 'simple-mock';
+import { spy, restore, stub } from 'simple-mock';
 import { isAsyncIterable } from 'iterall';
 import { RedisPubSub } from '../redis-pubsub';
 import * as IORedis from 'ioredis';
@@ -270,6 +270,65 @@ describe('RedisPubSub', () => {
         done(e);
       }
     });
+  });
+
+  it('refuses custom reviver with a deserializer', done => {
+    const reviver = stub();
+    const deserializer = stub();
+
+    try {
+      expect(() => new RedisPubSub({...mockOptions, reviver, deserializer}))
+          .to.throw("Reviver and deserializer can't be used together");
+      done();
+    } catch (e) {
+      done(e);
+    }
+  });
+
+  it('allows to use a custom serializer', done => {
+    const serializer = stub();
+    const serializedPayload = `{ "hello": "custom" }`;
+    serializer.returnWith(serializedPayload);
+
+    const pubSub = new RedisPubSub({...mockOptions, serializer });
+
+    try {
+      pubSub.subscribe('TOPIC', message => {
+        try {
+          expect(message).to.eql({hello: 'custom'});
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }).then(() => {
+        pubSub.publish('TOPIC', {hello: 'world'});
+      });
+    } catch (e) {
+      done(e);
+    }
+  });
+
+  it('allows to use a custom deserializer', done => {
+    const deserializer = stub();
+    const deserializedPayload = { hello: 'custom' };
+    deserializer.returnWith(deserializedPayload);
+
+    const pubSub = new RedisPubSub({...mockOptions, deserializer });
+
+    try {
+      pubSub.subscribe('TOPIC', message => {
+        try {
+          expect(message).to.eql({hello: 'custom'});
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }).then(() => {
+        pubSub.publish('TOPIC', {hello: 'world'});
+      });
+    } catch (e) {
+      done(e);
+    }
   });
 
   it('throws if you try to unsubscribe with an unknown id', () => {

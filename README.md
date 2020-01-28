@@ -115,7 +115,7 @@ The basic usage is great for development and you will be able to connect to a Re
 
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';
-import * as Redis from 'ioredis';
+import Redis from 'ioredis';
 
 const options = {
   host: REDIS_DOMAIN_NAME,

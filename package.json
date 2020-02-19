@@ -56,7 +56,7 @@
     "chai-as-promised": "^7.1.1",
     "graphql": "^14.5.4",
     "graphql-subscriptions": "^1.0.0",
-    "ioredis": "^4.6.3",
+    "ioredis": "^4.16.0",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^6.2.0",
     "remap-istanbul": "^0.12.0",

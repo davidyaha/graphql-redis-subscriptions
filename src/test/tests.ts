@@ -53,9 +53,13 @@ describe('RedisPubSub', () => {
 
   it('should verify close calls pub and sub quit methods', done => {
     const pubSub = new RedisPubSub(mockOptions);
-    pubSub.close();
-    expect(quitSpy.callCount).to.equal(2);
-    done();
+
+    pubSub.close()
+      .then(() => {
+        expect(quitSpy.callCount).to.equal(2);
+        done();
+      })
+      .catch(done);
   });
 
   it('can subscribe to specific redis channel and called when a message is published on it', done => {

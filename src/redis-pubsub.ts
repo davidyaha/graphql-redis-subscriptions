@@ -133,9 +133,11 @@ export class RedisPubSub implements PubSubEngine {
     return this.redisPublisher;
   }
 
-  public close(): void {
-    this.redisPublisher.quit();
-    this.redisSubscriber.quit();
+  public close(): Promise<any> {
+    return Promise.all([
+      this.redisPublisher.quit(),
+      this.redisSubscriber.quit(),
+    ]);
   }
 
   private onMessage(pattern: string, channel: string, message: string) {

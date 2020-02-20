@@ -320,7 +320,7 @@ describe('RedisPubSub', () => {
      }, err => {
         expect(err.message).to.eql('Custom serialization error');
         done();
-      })
+      });
     } catch (e) {
       done(e);
     }

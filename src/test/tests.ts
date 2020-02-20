@@ -308,6 +308,24 @@ describe('RedisPubSub', () => {
     }
   });
 
+  it('custom serializer can throw an error', done => {
+    const serializer = stub();
+    serializer.throwWith(new Error('Custom serialization error'));
+
+    const pubSub = new RedisPubSub({...mockOptions, serializer });
+
+    try {
+      pubSub.publish('TOPIC', {hello: 'world'}).then(() => {
+        done(new Error('Expected error to be thrown upon publish'));
+     }, err => {
+        expect(err.message).to.eql('Custom serialization error');
+        done();
+      })
+    } catch (e) {
+      done(e);
+    }
+  });
+
   it('allows to use a custom deserializer', done => {
     const deserializer = stub();
     const deserializedPayload = { hello: 'custom' };
@@ -319,6 +337,29 @@ describe('RedisPubSub', () => {
       pubSub.subscribe('TOPIC', message => {
         try {
           expect(message).to.eql({hello: 'custom'});
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }).then(() => {
+        pubSub.publish('TOPIC', {hello: 'world'});
+      });
+    } catch (e) {
+      done(e);
+    }
+  });
+
+  it('unparsed payload is returned if custom deserializer throws an error', done => {
+    const deserializer = stub();
+    deserializer.throwWith(new Error('Custom deserialization error'));
+
+    const pubSub = new RedisPubSub({...mockOptions, deserializer });
+
+    try {
+      pubSub.subscribe('TOPIC', message => {
+        try {
+          expect(message).to.be.a('string');
+          expect(message).to.eql('{"hello":"world"}');
           done();
         } catch (e) {
           done(e);

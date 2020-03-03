@@ -1,6 +1,6 @@
 {
   "name": "graphql-redis-subscriptions",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "A graphql-subscriptions PubSub Engine using redis",
   "main": "dist/index.js",
   "repository": {
@@ -47,10 +47,10 @@
   },
   "devDependencies": {
     "@types/chai": "^4.1.6",
-    "@types/ioredis": "4.14.1",
+    "@types/ioredis": "4.14.7",
     "@types/chai-as-promised": "7.1.1",
     "@types/mocha": "^7.0.0",
-    "@types/node": "12.12.19",
+    "@types/node": "13.5.3",
     "@types/simple-mock": "0.8.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",

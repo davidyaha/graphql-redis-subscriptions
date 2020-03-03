@@ -9,9 +9,14 @@ export interface PubSubRedisOptions {
   publisher?: RedisClient;
   subscriber?: RedisClient;
   reviver?: Reviver;
+  serializer?: Serializer;
+  deserializer?: Deserializer;
 }
 
 export class RedisPubSub implements PubSubEngine {
+  private readonly serializer?: Serializer;
+  private readonly deserializer?: Deserializer;
+
   constructor(options: PubSubRedisOptions = {}) {
     const {
       triggerTransform,
@@ -20,10 +25,19 @@ export class RedisPubSub implements PubSubEngine {
       subscriber,
       publisher,
       reviver,
+      serializer,
+      deserializer,
     } = options;
 
     this.triggerTransform = triggerTransform || (trigger => trigger as string);
+
+    if (reviver && deserializer) {
+      throw new Error("Reviver and deserializer can't be used together");
+    }
+
     this.reviver = reviver;
+    this.serializer = serializer;
+    this.deserializer = deserializer;
 
     if (subscriber && publisher) {
       this.redisPublisher = publisher;
@@ -53,7 +67,7 @@ export class RedisPubSub implements PubSubEngine {
     // handle messages received via psubscribe and subscribe
     this.redisSubscriber.on('pmessage', this.onMessage.bind(this));
     // partially applied function passes undefined for pattern arg since 'message' event won't provide it:
-    this.redisSubscriber.on('message', this.onMessage.bind(this, undefined)); 
+    this.redisSubscriber.on('message', this.onMessage.bind(this, undefined));
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
@@ -61,7 +75,7 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public async publish<T>(trigger: string, payload: T): Promise<void> {
-    await this.redisPublisher.publish(trigger, JSON.stringify(payload));
+    await this.redisPublisher.publish(trigger, this.serializer ? this.serializer(payload) : JSON.stringify(payload));
   }
 
   public subscribe(
@@ -108,7 +122,7 @@ export class RedisPubSub implements PubSubEngine {
       // unsubscribe from specific channel and pattern match
       this.redisSubscriber.unsubscribe(triggerName);
       this.redisSubscriber.punsubscribe(triggerName);
-      
+
       delete this.subsRefsMap[triggerName];
     } else {
       const index = refs.indexOf(subId);
@@ -146,7 +160,7 @@ export class RedisPubSub implements PubSubEngine {
 
     let parsedMessage;
     try {
-      parsedMessage = JSON.parse(message, this.reviver);
+      parsedMessage = this.deserializer ? this.deserializer(message) : JSON.parse(message, this.reviver);
     } catch (e) {
       parsedMessage = message;
     }
@@ -174,3 +188,5 @@ export type TriggerTransform = (
   channelOptions?: Object,
 ) => string;
 export type Reviver = (key: any, value: any) => any;
+export type Serializer = (source: any) => string;
+export type Deserializer = (source: string) => any;

@@ -37,6 +37,6 @@ export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: 
       [$$asyncIterator]() {
         return this;
       },
-    };
+    } as any;
   };
 };

@@ -138,7 +138,8 @@ You can learn more on the `ioredis` package [here](https://github.com/luin/iored
 ## Using a custom reviver
 
 By default, Javascript objects are serialized using the `JSON.stringify` and `JSON.parse` methods.
-For handling custom objects, you may pass your own reviver function to `JSON.parse`.
+This means that not all objects - such as Date or Regexp objects - will deserialize correctly without a custom reviver, that work out of the box with the default in-memory implementation.
+For handling such objects, you may pass your own reviver function to `JSON.parse`, for example to handle Date objects the following reviver can be used:
 
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';

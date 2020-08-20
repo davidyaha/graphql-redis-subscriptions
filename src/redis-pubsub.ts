@@ -1,4 +1,4 @@
-import { RedisOptions, Redis as RedisClient } from 'ioredis';
+import { RedisOptions, Redis as RedisClient, Cluster } from 'ioredis';
 import { PubSubEngine } from 'graphql-subscriptions';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
@@ -6,8 +6,8 @@ export interface PubSubRedisOptions {
   connection?: RedisOptions;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
-  publisher?: RedisClient;
-  subscriber?: RedisClient;
+  publisher?: RedisClient | Cluster;
+  subscriber?: RedisClient | Cluster;
   reviver?: Reviver;
   serializer?: Serializer;
   deserializer?: Deserializer;

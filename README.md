@@ -133,6 +133,21 @@ const pubsub = new RedisPubSub({
 });
 ```
 
+**Also works with your Redis Cluster**
+
+```javascript
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { Cluster } from 'ioredis';
+
+const cluster = new Cluster(REDIS_NODES); // like: [{host: 'ipOrHost', port: 1234}, ...]
+const pubsub = new RedisPubSub({
+  ...,
+  publisher: cluster,
+  subscriber: cluster
+});
+```
+
+
 You can learn more on the `ioredis` package [here](https://github.com/luin/ioredis).
 
 ## Using a custom reviver
@@ -231,3 +246,16 @@ The subscription string that Redis will receive will be `comments.added.graphql-
 This subscription string is much more specific and means the the filtering required for this type of subscription is not needed anymore.
 This is one step towards lifting the load off of the GraphQL API server regarding subscriptions.
 
+## Tests
+
+### Spin a Redis in docker server and cluster
+Please refer to https://github.com/Grokzen/docker-redis-cluster documentation to start a cluster
+```shell script
+$ docker run --rm -p 6379:6379 redis:alpine
+$ export REDIS_CLUSTER_IP=0.0.0.0; docker run -e "IP=0.0.0.0" --rm -p 7000:7000 -p 7001:7001 -p 7002:7002 -p 7003:7003 -p 7004:7004 -p 7005:7005 grokzen/redis-cluster
+```
+
+### Test
+```shell script
+npm run test
+```

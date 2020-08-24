@@ -25,8 +25,19 @@
     "member-access": true,
     "member-ordering": [
       true,
-      "public-before-private",
-      "static-before-instance"
+      {
+        "order": [
+          "public-constructor",
+          "public-static-field",
+          "public-instance-field",
+          "private-static-field",
+          "private-constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-instance-field",
+          "private-instance-method"
+        ]
+      }
     ],
     "no-any": false,
     "no-arg": true,

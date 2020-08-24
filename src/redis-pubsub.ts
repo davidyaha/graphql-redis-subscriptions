@@ -1,21 +1,22 @@
-import { RedisOptions, Redis as RedisClient, Cluster } from 'ioredis';
+import { RedisOptions, Redis, Cluster } from 'ioredis';
 import { PubSubEngine } from 'graphql-subscriptions';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
+
+type RedisClient = Redis | Cluster;
+type OnMessage<T> = (message: T) => void;
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
-  publisher?: RedisClient | Cluster;
-  subscriber?: RedisClient | Cluster;
+  publisher?: RedisClient;
+  subscriber?: RedisClient;
   reviver?: Reviver;
   serializer?: Serializer;
   deserializer?: Deserializer;
 }
 
 export class RedisPubSub implements PubSubEngine {
-  private readonly serializer?: Serializer;
-  private readonly deserializer?: Deserializer;
 
   constructor(options: PubSubRedisOptions = {}) {
     const {
@@ -78,9 +79,9 @@ export class RedisPubSub implements PubSubEngine {
     await this.redisPublisher.publish(trigger, this.serializer ? this.serializer(payload) : JSON.stringify(payload));
   }
 
-  public subscribe(
+  public subscribe<T = any>(
     trigger: string,
-    onMessage: Function,
+    onMessage: OnMessage<T>,
     options: Object = {},
   ): Promise<number> {
 
@@ -154,6 +155,17 @@ export class RedisPubSub implements PubSubEngine {
     ]);
   }
 
+  private readonly serializer?: Serializer;
+  private readonly deserializer?: Deserializer;
+  private triggerTransform: TriggerTransform;
+  private redisSubscriber: RedisClient;
+  private redisPublisher: RedisClient;
+  private reviver: Reviver;
+
+  private subscriptionMap: { [subId: number]: [string, Function] };
+  private subsRefsMap: { [trigger: string]: Array<number> };
+  private currentSubscriptionId: number;
+
   private onMessage(pattern: string, channel: string, message: string) {
     const subscribers = this.subsRefsMap[pattern || channel];
 
@@ -172,15 +184,6 @@ export class RedisPubSub implements PubSubEngine {
       listener(parsedMessage);
     }
   }
-
-  private triggerTransform: TriggerTransform;
-  private redisSubscriber: RedisClient;
-  private redisPublisher: RedisClient;
-  private reviver: Reviver;
-
-  private subscriptionMap: { [subId: number]: [string, Function] };
-  private subsRefsMap: { [trigger: string]: Array<number> };
-  private currentSubscriptionId: number;
 }
 
 export type Path = Array<string | number>;

@@ -103,7 +103,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
         eventName => this.pubsub.subscribe(eventName, this.pushValue.bind(this), this.options),
       ));
     }
-    return this.subscriptionIds
+    return this.subscriptionIds;
   }
 
   private unsubscribeAll(subscriptionIds: number[]) {

@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.2.8",
-    "@types/ioredis": "4.14.9",
+    "@types/ioredis": "4.17.3",
     "@types/chai-as-promised": "7.1.1",
     "@types/mocha": "^7.0.0",
     "@types/node": "13.13.0",

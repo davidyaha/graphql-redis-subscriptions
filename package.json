@@ -27,8 +27,7 @@
   "homepage": "https://github.com/davidyaha/graphql-redis-subscriptions",
   "scripts": {
     "compile": "tsc",
-    "test": "npm run testonly -- && npm run integration --",
-    "posttest": "npm run lint",
+    "test": "npm run coverage && npm run lint",
     "lint": "eslint src --ext ts",
     "watch": "tsc -w",
     "testonly": "mocha --reporter spec src/test/tests.ts",

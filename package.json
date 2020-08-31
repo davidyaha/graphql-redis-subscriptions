@@ -59,7 +59,7 @@
     "ioredis": "^4.16.0",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^8.1.3",
-    "remap-istanbul": "^0.12.0",
+    "remap-istanbul": "^0.13.0",
     "simple-mock": "^0.8.0",
     "tslint": "^5.8.0",
     "typescript": "^4.0.2"

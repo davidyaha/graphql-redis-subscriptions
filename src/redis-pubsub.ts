@@ -45,6 +45,7 @@ export class RedisPubSub implements PubSubEngine {
       this.redisSubscriber = subscriber;
     } else {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const IORedis = require('ioredis');
         this.redisPublisher = new IORedis(connection);
         this.redisSubscriber = new IORedis(connection);
@@ -82,7 +83,7 @@ export class RedisPubSub implements PubSubEngine {
   public subscribe<T = any>(
     trigger: string,
     onMessage: OnMessage<T>,
-    options: Object = {},
+    options: unknown = {},
   ): Promise<number> {
 
     const triggerName: string = this.triggerTransform(trigger, options);
@@ -96,7 +97,7 @@ export class RedisPubSub implements PubSubEngine {
       return Promise.resolve(id);
     } else {
       return new Promise<number>((resolve, reject) => {
-        const subscribeFn = !!options['pattern'] ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
+        const subscribeFn = options['pattern'] ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
 
         subscribeFn.call(this.redisSubscriber, triggerName, err => {
           if (err) {
@@ -136,7 +137,7 @@ export class RedisPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
   }
 
-  public asyncIterator<T>(triggers: string | string[], options?: Object): AsyncIterator<T> {
+  public asyncIterator<T>(triggers: string | string[], options?: unknown): AsyncIterator<T> {
     return new PubSubAsyncIterator<T>(this, triggers, options);
   }
 
@@ -162,7 +163,7 @@ export class RedisPubSub implements PubSubEngine {
   private redisPublisher: RedisClient;
   private reviver: Reviver;
 
-  private subscriptionMap: { [subId: number]: [string, Function] };
+  private subscriptionMap: { [subId: number]: [string, OnMessage<unknown>] };
   private subsRefsMap: { [trigger: string]: Array<number> };
   private currentSubscriptionId: number;
 
@@ -190,7 +191,7 @@ export type Path = Array<string | number>;
 export type Trigger = string | Path;
 export type TriggerTransform = (
   trigger: Trigger,
-  channelOptions?: Object,
+  channelOptions?: unknown,
 ) => string;
 export type Reviver = (key: any, value: any) => any;
 export type Serializer = (source: any) => string;

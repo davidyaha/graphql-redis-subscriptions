@@ -30,7 +30,7 @@
     "pretest": "npm run compile",
     "test": "npm run testonly -- && npm run integration --",
     "posttest": "npm run lint",
-    "lint": "tslint --project ./tsconfig.json ./src/**/*.ts",
+    "lint": "eslint src --ext ts",
     "watch": "tsc -w",
     "testonly": "mocha --reporter spec --full-trace --exit ./dist/test/tests.js ",
     "integration": "npm run compile && mocha --reporter spec --full-trace --exit ./dist/test/integration-tests.js",
@@ -52,8 +52,11 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "13.13.0",
     "@types/simple-mock": "^0.8.1",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "eslint": "^7.7.0",
     "graphql": "^15.3.0",
     "graphql-subscriptions": "^1.1.0",
     "ioredis": "^4.17.3",
@@ -61,7 +64,6 @@
     "mocha": "^7.2.0",
     "remap-istanbul": "^0.12.0",
     "simple-mock": "^0.8.0",
-    "tslint": "^5.20.1",
     "typescript": "^3.9.7"
   },
   "optionalDependencies": {

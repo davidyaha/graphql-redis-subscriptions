@@ -46,12 +46,12 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     return this.listening ? this.pullValue() : this.return();
   }
 
-  public async return() {
+  public async return(): Promise<{ value: unknown, done: true }> {
     await this.emptyQueue();
     return { value: undefined, done: true };
   }
 
-  public async throw(error) {
+  public async throw(error): Promise<never> {
     await this.emptyQueue();
     return Promise.reject(error);
   }

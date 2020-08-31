@@ -7,7 +7,7 @@ import { subscribe } from 'graphql/subscription';
 
 import { RedisPubSub } from '../redis-pubsub';
 import { withFilter } from '../with-filter';
-import Redis, { Cluster } from 'ioredis';
+import { Cluster } from 'ioredis';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;

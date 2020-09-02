@@ -7,6 +7,7 @@ import { subscribe } from 'graphql/subscription';
 
 import { RedisPubSub } from '../redis-pubsub';
 import { withFilter } from '../with-filter';
+import { Cluster } from 'ioredis';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -121,4 +122,32 @@ describe('PubSubAsyncIterator', function() {
       .then(res => {
         expect(returnSpy.callCount).to.be.gte(1);
       }));
+});
+
+
+describe('PubSubCluster', () => {
+    const nodes = [7000, 7001, 7002, 7003, 7004, 7005].map(port => ({ host: '127.0.0.1', port }));
+    const cluster = new Cluster(nodes);
+    const eventKey = 'clusterEvtKey';
+    const pubsub = new RedisPubSub({
+        publisher: cluster,
+        subscriber: cluster,
+    });
+
+    before(async () => {
+        await cluster.set('toto', 'aaa');
+        setTimeout(() => {
+            pubsub.publish(eventKey, { fired: true, from: 'cluster' });
+        }, 500);
+    });
+
+    it('Cluster should work',  async () => {
+        expect(await cluster.get('toto')).to.eq('aaa');
+    });
+
+    it('Cluster subscribe',   () => {
+        pubsub.subscribe<{fire: boolean, from: string}>(eventKey, (data) => {
+            expect(data).to.contains({ fired: true, from: 'cluster' });
+        });
+    }).timeout(2000);
 });

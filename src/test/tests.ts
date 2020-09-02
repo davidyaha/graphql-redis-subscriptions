@@ -199,8 +199,8 @@ describe('RedisPubSub', () => {
     const pubSub = new RedisPubSub(mockOptions);
     const onMessageSpy = spy(() => null);
     const subscriptionPromises = [
-      pubSub.subscribe('Posts', onMessageSpy as Function),
-      pubSub.subscribe('Posts', onMessageSpy as Function),
+      pubSub.subscribe('Posts', onMessageSpy),
+      pubSub.subscribe('Posts', onMessageSpy),
     ];
 
     Promise.all(subscriptionPromises).then(async subIds => {

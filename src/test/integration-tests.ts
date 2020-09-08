@@ -1,13 +1,14 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { mock } from 'simple-mock';
-import { parse, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLFieldResolver } from 'graphql';
-import { isAsyncIterable } from 'iterall';
-import { subscribe } from 'graphql/subscription';
 
-import { RedisPubSub } from '../redis-pubsub';
-import { withFilter } from '../with-filter';
+import { GraphQLFieldResolver, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from 'graphql';
+
 import { Cluster } from 'ioredis';
+import { RedisPubSub } from '../redis-pubsub';
+import { isAsyncIterable } from 'iterall';
+import { mock } from 'simple-mock';
+import { subscribe } from 'graphql/subscription';
+import { withFilter } from '../with-filter';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;

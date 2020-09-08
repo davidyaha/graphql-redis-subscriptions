@@ -1,6 +1,7 @@
 import {Cluster, Ok, Redis, RedisOptions} from 'ioredis';
-import {PubSubEngine} from 'graphql-subscriptions';
+
 import {PubSubAsyncIterator} from './pubsub-async-iterator';
+import {PubSubEngine} from 'graphql-subscriptions';
 
 type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
@@ -136,8 +137,9 @@ export class RedisPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
   }
 
-  public asyncIterator<T>(triggers: string | string[], options?: unknown): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers, options);
+  // return type can be simplified after https://github.com/leebyron/iterall/issues/49 is resolved
+  public asyncIterator<T>(triggers: string | string[], options?: unknown): PubSubAsyncIterator<T> & AsyncIterator<T> & AsyncIterable<T> {
+    return new PubSubAsyncIterator<T>(this, triggers, options) as unknown as PubSubAsyncIterator<T> & AsyncIterator<T> & AsyncIterable<T>;
   }
 
   public getSubscriber(): RedisClient {

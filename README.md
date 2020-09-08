@@ -1,6 +1,6 @@
 # graphql-redis-subscriptions
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/davidyaha/graphql-redis-subscriptions.svg)](https://greenkeeper.io/)
+[![Dependabot badge](https://flat.badgen.net/dependabot/davidyaha/graphql-redis-subscriptions?icon=dependabot)](https://dependabot.com/)
 [![Build Status](https://travis-ci.org/davidyaha/graphql-redis-subscriptions.svg?branch=master)](https://travis-ci.org/davidyaha/graphql-redis-subscriptions)
 
 This package implements the PubSubEngine Interface from the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package and also the new AsyncIterator interface. 

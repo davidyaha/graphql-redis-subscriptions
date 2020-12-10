@@ -79,7 +79,9 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public async publish<T>(trigger: string, payload: T): Promise<void> {
-    await this.redisPublisher.publish(trigger, this.serializer ? this.serializer(payload) : JSON.stringify(payload));
+    const triggerName: string = this.triggerTransform(trigger);
+    
+    await this.redisPublisher.publish(triggerName, this.serializer ? this.serializer(payload) : JSON.stringify(payload));
   }
 
   public subscribe<T = any>(

@@ -14,6 +14,7 @@ export interface PubSubRedisOptions {
   reviver?: Reviver;
   serializer?: Serializer;
   deserializer?: Deserializer;
+  keyPrefix?: KeyPrefix;
 }
 
 export class RedisPubSub implements PubSubEngine {
@@ -28,6 +29,7 @@ export class RedisPubSub implements PubSubEngine {
       reviver,
       serializer,
       deserializer,
+      keyPrefix = "",
     } = options;
 
     this.triggerTransform = triggerTransform || (trigger => trigger as string);
@@ -36,6 +38,7 @@ export class RedisPubSub implements PubSubEngine {
       throw new Error("Reviver and deserializer can't be used together");
     }
 
+    this.keyPrefix = keyPrefix;
     this.reviver = reviver;
     this.serializer = serializer;
     this.deserializer = deserializer;
@@ -79,7 +82,12 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public async publish<T>(trigger: string, payload: T): Promise<void> {
-    await this.redisPublisher.publish(trigger, this.serializer ? this.serializer(payload) : JSON.stringify(payload));
+    const triggerName = `${this.keyPrefix}${trigger}`;
+
+    await this.redisPublisher.publish(
+      triggerName,
+      this.serializer ? this.serializer(payload) : JSON.stringify(payload)
+    );
   }
 
   public subscribe<T = any>(
@@ -88,7 +96,11 @@ export class RedisPubSub implements PubSubEngine {
     options: unknown = {},
   ): Promise<number> {
 
-    const triggerName: string = this.triggerTransform(trigger, options);
+    const triggerNameFormat = `${this.keyPrefix}${trigger}`;
+    const triggerName: string = this.triggerTransform(
+      triggerNameFormat,
+      options
+    );
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
 
@@ -195,3 +207,4 @@ export type TriggerTransform = (
 export type Reviver = (key: any, value: any) => any;
 export type Serializer = (source: any) => string;
 export type Deserializer = (source: string) => any;
+export type KeyPrefix = string;

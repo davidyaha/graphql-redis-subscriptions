@@ -14,6 +14,8 @@ export interface PubSubRedisOptions {
   reviver?: Reviver;
   serializer?: Serializer;
   deserializer?: Deserializer;
+  messageEventName?: string;
+  pmessageEventName?: string;
 }
 
 export class RedisPubSub implements PubSubEngine {
@@ -28,6 +30,8 @@ export class RedisPubSub implements PubSubEngine {
       reviver,
       serializer,
       deserializer,
+      messageEventName = 'message',
+      pmessageEventName = 'pmessage',
     } = options;
 
     this.triggerTransform = triggerTransform || (trigger => trigger as string);
@@ -69,9 +73,9 @@ export class RedisPubSub implements PubSubEngine {
     }
 
     // handle messages received via psubscribe and subscribe
-    this.redisSubscriber.on('pmessage', this.onMessage.bind(this));
+    this.redisSubscriber.on(pmessageEventName, this.onMessage.bind(this));
     // partially applied function passes undefined for pattern arg since 'message' event won't provide it:
-    this.redisSubscriber.on('message', this.onMessage.bind(this, undefined));
+    this.redisSubscriber.on(messageEventName, this.onMessage.bind(this, undefined));
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
@@ -194,4 +198,4 @@ export type TriggerTransform = (
 ) => string;
 export type Reviver = (key: any, value: any) => any;
 export type Serializer = (source: any) => string;
-export type Deserializer = (source: string) => any;
+export type Deserializer = (source: string | Buffer) => any;

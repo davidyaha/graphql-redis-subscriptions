@@ -15,7 +15,7 @@ const expect = chai.expect;
 const FIRST_EVENT = 'FIRST_EVENT';
 const SECOND_EVENT = 'SECOND_EVENT';
 
-function buildSchema(iterator, patternIterator) {
+function buildSchema(iterator, patternIterator, patternChannelIterator, patternChannelFilterIterator) {
   return new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'Query',
@@ -46,6 +46,22 @@ function buildSchema(iterator, patternIterator) {
             return 'SECOND_EVENT';
           },
         },
+
+        testPatternChannelSubscription: {
+          type: GraphQLString,
+          subscribe: withFilter(() => patternChannelIterator, () => true) as GraphQLFieldResolver<any, any, any>,
+          resolve: root => {
+            return `${root.pattern}|${root.channel}|${root.message}`;
+          },
+        },
+
+        testPatternChannelFilterSubscription: {
+          type: GraphQLString,
+          subscribe: withFilter(() => patternChannelFilterIterator, (x) => !x.channel.endsWith('skip')) as GraphQLFieldResolver<any, any, any>,
+          resolve: root => {
+            return root.message;
+          },
+        },
       },
     }),
   });
@@ -64,11 +80,25 @@ describe('PubSubAsyncIterator', function() {
     }
   `);
 
+  const patternChannelQuery = parse(`
+    subscription S1 {
+      testPatternChannelSubscription
+    }
+  `);
+
+  const patternChannelFilterQuery = parse(`
+    subscription S1 {
+      testPatternChannelFilterSubscription
+    }
+  `);
+
   const pubsub = new RedisPubSub();
   const origIterator = pubsub.asyncIterator(FIRST_EVENT);
   const origPatternIterator = pubsub.asyncIterator('SECOND*', { pattern: true });
+  const origPatternChannelIterator = pubsub.asyncIterator('THIRD:*', { pattern: true, includeChannel: true });
+  const origPatternChannelFilterIterator = pubsub.asyncIterator('FORTH:*', { pattern: true, includeChannel: true });
   const returnSpy = mock(origIterator, 'return');
-  const schema = buildSchema(origIterator, origPatternIterator);
+  const schema = buildSchema(origIterator, origPatternIterator, origPatternChannelIterator, origPatternChannelFilterIterator);
 
   before(() => {
     // Warm the redis connection so that tests would pass
@@ -107,6 +137,37 @@ describe('PubSubAsyncIterator', function() {
       })
       .then(res => {
         expect(res.value.data.testPatternSubscription).to.equal('SECOND_EVENT');
+      }));
+
+  it('should allow pattern subscriptions with channel', () =>
+    subscribe(schema, patternChannelQuery)
+      .then(ai => {
+        // tslint:disable-next-line:no-unused-expression
+        expect(isAsyncIterable(ai)).to.be.true;
+
+        const r = (ai as AsyncIterator<any>).next();
+        setTimeout(() => pubsub.publish('THIRD:1', 'THIRD_EVENT_VALUE'), 50);
+
+        return r;
+      })
+      .then(res => {
+        expect(res.value.data.testPatternChannelSubscription).to.equal('THIRD:*|THIRD:1|THIRD_EVENT_VALUE');
+      }));
+
+  it('should allow to filter by channel with pattern subscriptions', () =>
+    subscribe(schema, patternChannelFilterQuery)
+      .then(ai => {
+        // tslint:disable-next-line:no-unused-expression
+        expect(isAsyncIterable(ai)).to.be.true;
+
+        const r = (ai as AsyncIterator<any>).next();
+        setTimeout(() => pubsub.publish('FORTH:1:skip', 'skip_value'), 50);
+        setTimeout(() => pubsub.publish('FORTH:1:valid', 'valid_value'), 100);
+
+        return r;
+      })
+      .then(res => {
+        expect(res.value.data.testPatternChannelFilterSubscription).to.equal('valid_value');
       }));
 
   it('should clear event handlers', () =>

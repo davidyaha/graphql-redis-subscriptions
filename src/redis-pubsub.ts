@@ -4,6 +4,15 @@ import {PubSubAsyncIterator} from './pubsub-async-iterator';
 
 type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
+type SubscribeOptions = {
+  // if specified, will use the PSUBSCRIBE Redis command instead of SUBSCRIBE
+  pattern?: boolean,
+  // if specified, the message callbacks  will be wrapped in an object to allow access to
+  // pattern and channel as returned by redis. { messsage: any, pattern?: string, channel: string }
+  // usually only useful if you are using psubscribe
+  includeChannel?: boolean,
+  [key: string]: any,
+};
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
@@ -89,12 +98,16 @@ export class RedisPubSub implements PubSubEngine {
   public subscribe<T = any>(
     trigger: string,
     onMessage: OnMessage<T>,
-    options: unknown = {},
+    options: SubscribeOptions = {},
   ): Promise<number> {
 
     const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
-    this.subscriptionMap[id] = [triggerName, onMessage];
+    if (options['includeChannel']) {
+	this.subscriptionMap[id] = [triggerName, onMessage, true];
+    } else {
+	this.subscriptionMap[id] = [triggerName, onMessage];
+    }
 
     const refs = this.subsRefsMap[triggerName];
     if (refs && refs.length > 0) {
@@ -140,7 +153,7 @@ export class RedisPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
   }
 
-  public asyncIterator<T>(triggers: string | string[], options?: unknown): AsyncIterator<T> {
+  public asyncIterator<T>(triggers: string | string[], options?: SubscribeOptions): AsyncIterator<T> {
     return new PubSubAsyncIterator<T>(this, triggers, options);
   }
 
@@ -166,7 +179,9 @@ export class RedisPubSub implements PubSubEngine {
   private readonly redisPublisher: RedisClient;
   private readonly reviver: Reviver;
 
-  private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>] };
+  // subscriptionMap is a mapping of all the active subscriptions, their message callbacks
+  // andn whether the message callback should encapsulate the message to provide `channel` and `pattern`
+  private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>, boolean?] };
   private readonly subsRefsMap: { [trigger: string]: Array<number> };
   private currentSubscriptionId: number;
 
@@ -184,8 +199,12 @@ export class RedisPubSub implements PubSubEngine {
     }
 
     for (const subId of subscribers) {
-      const [, listener] = this.subscriptionMap[subId];
-      listener(parsedMessage);
+      const [, listener, includeChannel] = this.subscriptionMap[subId];
+      if (includeChannel) {
+	listener({ message: parsedMessage, channel, pattern });
+      } else {
+	listener(parsedMessage);
+      }
     }
   }
 }

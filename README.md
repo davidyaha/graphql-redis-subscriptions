@@ -111,7 +111,7 @@ export const resolvers = {
 
 ## Creating the Redis Client
 
-The basic usage is great for development and you will be able to connect to a Redis server running on your system seamlessly. For production usage, it is recommended to send a Redis client from the using code and pass in any options you would like to use. e.g: Connection retry strategy.
+The basic usage is great for development and you will be able to connect to a Redis server running on your system seamlessly. For production usage, it is recommended to pass a redis client (like ioredis) to the RedisPubSub constructor. This way you can control all the options of your redis connection, for example the connection retry strategy.
 
 ```javascript
 import { RedisPubSub } from 'graphql-redis-subscriptions';

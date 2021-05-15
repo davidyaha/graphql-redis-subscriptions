@@ -92,6 +92,28 @@ export const resolvers = {
 }
 ```
 
+## Using data from channel when using using a pattern subscription
+
+```javascript
+export const resolvers = {
+  Subscription: {
+    somethingChanged: {
+      subscribe: (_, args) => {
+        return pubsub.asyncIterator(`${SOMETHING_CHANGED_TOPIC}.${args.relevantId}.*`, {
+          pattern: true,
+          // Instructs RedisPubSub to encapsulate messages as `{ pattern, channel, message }`
+          includeChannel: true,
+        });
+      },
+      resolve: (x) => {
+        // Received ${value.message} in channel ${value.channel} by subscribing to pattern ${value.pattern}
+        // do something with message, channel or pattern
+      },
+    },
+  },
+}
+```
+
 ## Using both arguments and payload to filter events
 
 ```javascript

@@ -133,6 +133,28 @@ const pubsub = new RedisPubSub({
 });
 ```
 
+**Receiving messages as Buffers**
+
+Some Redis use cases require receiving binary-safe data back from redis (in a Buffer). To accomplish this, override the event names for receiving messages and pmessages.  Different redis clients use different names, for example:
+
+| library | message event | message event (Buffer) | pmessage event | pmessage event (Buffer) |
+| ------- | ------------- | ---------------------- | -------------- | ----------------------- |
+| ioredis | `message` | `messageBuffer` | `pmessage` | `pmessageBuffer` |
+| node-redis | `message` | `message_buffer` | `pmessage` | `pmessage_buffer` |
+
+```javascript
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import * as Redis from 'ioredis';
+
+const pubsub = new RedisPubSub({
+  ...,
+  // Tells RedisPubSub to register callbacks on the messageBuffer and pmessageBuffer EventEmitters
+  messageEventName: 'messageBuffer',
+  pmessageEventName: 'pmessageBuffer',
+});
+```
+
+
 **Also works with your Redis Cluster**
 
 ```javascript

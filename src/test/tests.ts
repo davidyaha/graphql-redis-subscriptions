@@ -1,9 +1,12 @@
+import * as IORedis from 'ioredis';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { spy, restore, stub } from 'simple-mock';
-import { isAsyncIterable } from 'iterall';
+
+import { restore, spy, stub } from 'simple-mock';
+
 import { RedisPubSub } from '../redis-pubsub';
-import * as IORedis from 'ioredis';
+import { doesNotMatch } from 'assert';
+import { isAsyncIterable } from 'iterall';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -423,8 +426,13 @@ describe('RedisPubSub', () => {
 });
 
 describe('PubSubAsyncIterator', () => {
+  async function firstResult<T>(iterator: AsyncIterable<T>): Promise<T> {
+    for await (let result of iterator) {
+      return result
+    }
+  }
 
-  it('should expose valid asyncItrator for a specific event', () => {
+  it('should expose valid asyncItrator for a specific event', (done) => {
     const pubSub = new RedisPubSub(mockOptions);
     const eventName = 'test';
     const iterator = pubSub.asyncIterator(eventName);
@@ -432,6 +440,13 @@ describe('PubSubAsyncIterator', () => {
     expect(iterator).to.exist;
     // tslint:disable-next-line:no-unused-expression
     expect(isAsyncIterable(iterator)).to.be.true;
+
+    firstResult(iterator).then(result => {
+      expect(result).eql({ test: true })
+      done()
+    }).catch(done)
+
+    pubSub.publish(eventName, { test: true })
   });
 
   it('should trigger event on asyncIterator when published', done => {

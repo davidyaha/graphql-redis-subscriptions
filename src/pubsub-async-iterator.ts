@@ -30,7 +30,10 @@ import { PubSubEngine } from 'graphql-subscriptions';
  * @property pubsub @type {PubSubEngine}
  * The PubSubEngine whose events will be observed.
  */
-export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - https://github.com/leebyron/iterall/issues/49
+export class PubSubAsyncIterator<T> implements AsyncIterator<T>, AsyncIterable<T> {
 
   constructor(pubsub: PubSubEngine, eventNames: string | string[], options?: unknown) {
     this.pubsub = pubsub;
@@ -41,7 +44,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     this.eventsArray = typeof eventNames === 'string' ? [eventNames] : eventNames;
   }
 
-  public async next() {
+  public async next(): Promise<IteratorResult<T>> {
     await this.subscribeAll();
     return this.listening ? this.pullValue() : this.return();
   }
@@ -51,17 +54,17 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     return { value: undefined, done: true };
   }
 
-  public async throw(error): Promise<never> {
+  public async throw(error: Error): Promise<never> {
     await this.emptyQueue();
     return Promise.reject(error);
   }
 
-  public [$$asyncIterator]() {
+  public [$$asyncIterator](): AsyncIterator<T> {
     return this;
   }
 
-  private pullQueue: Array<(data: { value: unknown, done: boolean }) => void>;
-  private pushQueue: any[];
+  private pullQueue: Array<(data: { value: T, done: boolean }) => void>;
+  private pushQueue: T[];
   private eventsArray: string[];
   private subscriptionIds: Promise<number[]> | undefined;
   private listening: boolean;
@@ -77,7 +80,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     }
   }
 
-  private pullValue(): Promise<IteratorResult<any>> {
+  private pullValue(): Promise<IteratorResult<T>> {
     return new Promise(resolve => {
       if (this.pushQueue.length !== 0) {
         resolve({ value: this.pushQueue.shift(), done: false });

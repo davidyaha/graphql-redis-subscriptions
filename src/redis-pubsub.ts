@@ -1,6 +1,7 @@
 import {Cluster, Ok, Redis, RedisOptions} from 'ioredis';
-import {PubSubEngine} from 'graphql-subscriptions';
+
 import {PubSubAsyncIterator} from './pubsub-async-iterator';
+import {PubSubEngine} from 'graphql-subscriptions';
 
 type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
@@ -78,7 +79,7 @@ export class RedisPubSub implements PubSubEngine {
     this.redisSubscriber.on(messageEventName, this.onMessage.bind(this, undefined));
 
     this.subscriptionMap = {};
-    this.subsRefsMap = {};
+    this.subsRefsMap = new Map<string, Set<number>>();
     this.currentSubscriptionId = 0;
   }
 
@@ -96,9 +97,9 @@ export class RedisPubSub implements PubSubEngine {
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
 
-    const refs = this.subsRefsMap[triggerName];
-    if (refs && refs.length > 0) {
-      this.subsRefsMap[triggerName] = [...refs, id];
+    const refs = this.subsRefsMap.get(triggerName);
+    if (refs?.size > 0) {
+      refs.add(id)
       return Promise.resolve(id);
     } else {
       return new Promise<number>((resolve, reject) => {
@@ -108,10 +109,7 @@ export class RedisPubSub implements PubSubEngine {
           if (err) {
             reject(err);
           } else {
-            this.subsRefsMap[triggerName] = [
-              ...(this.subsRefsMap[triggerName] || []),
-              id,
-            ];
+            refs.add(id)
             resolve(id);
           }
         });
@@ -121,21 +119,18 @@ export class RedisPubSub implements PubSubEngine {
 
   public unsubscribe(subId: number): void {
     const [triggerName = null] = this.subscriptionMap[subId] || [];
-    const refs = this.subsRefsMap[triggerName];
+    const refs = this.subsRefsMap.get(triggerName);
 
     if (!refs) throw new Error(`There is no subscription of id "${subId}"`);
 
-    if (refs.length === 1) {
+    if (refs.size === 1) {
       // unsubscribe from specific channel and pattern match
       this.redisSubscriber.unsubscribe(triggerName);
       this.redisSubscriber.punsubscribe(triggerName);
 
-      delete this.subsRefsMap[triggerName];
+      this.subsRefsMap.delete(triggerName);
     } else {
-      const index = refs.indexOf(subId);
-      this.subsRefsMap[triggerName] = index === -1
-          ? refs
-          : [...refs.slice(0, index), ...refs.slice(index + 1)];
+      refs.delete(subId)
     }
     delete this.subscriptionMap[subId];
   }
@@ -167,14 +162,14 @@ export class RedisPubSub implements PubSubEngine {
   private readonly reviver: Reviver;
 
   private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>] };
-  private readonly subsRefsMap: { [trigger: string]: Array<number> };
+  private readonly subsRefsMap: Map<string, Set<number>>;
   private currentSubscriptionId: number;
 
   private onMessage(pattern: string, channel: string, message: string) {
-    const subscribers = this.subsRefsMap[pattern || channel];
+    const subscribers = this.subsRefsMap.get(pattern || channel);
 
     // Don't work for nothing..
-    if (!subscribers || !subscribers.length) return;
+    if (!subscribers?.size) return;
 
     let parsedMessage;
     try {
@@ -183,7 +178,7 @@ export class RedisPubSub implements PubSubEngine {
       parsedMessage = message;
     }
 
-    for (const subId of subscribers) {
+    for (const subId in subscribers) {
       const [, listener] = this.subscriptionMap[subId];
       listener(parsedMessage);
     }

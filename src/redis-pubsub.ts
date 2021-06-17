@@ -6,7 +6,7 @@ type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
 
 export interface PubSubRedisOptions {
-  connection?: RedisOptions;
+  connection?: RedisOptions | string;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
   publisher?: RedisClient;

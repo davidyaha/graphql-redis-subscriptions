@@ -80,7 +80,7 @@ describe('PubSubAsyncIterator', function() {
   });
 
   it('should allow subscriptions', () =>
-    subscribe(schema, query)
+    subscribe({ schema, document: query})
       .then(ai => {
         // tslint:disable-next-line:no-unused-expression
         expect(isAsyncIterable(ai)).to.be.true;
@@ -95,7 +95,7 @@ describe('PubSubAsyncIterator', function() {
       }));
 
   it('should allow pattern subscriptions', () =>
-    subscribe(schema, patternQuery)
+    subscribe({ schema, document: patternQuery })
       .then(ai => {
         // tslint:disable-next-line:no-unused-expression
         expect(isAsyncIterable(ai)).to.be.true;
@@ -110,7 +110,7 @@ describe('PubSubAsyncIterator', function() {
       }));
 
   it('should clear event handlers', () =>
-    subscribe(schema, query)
+    subscribe({ schema, document: query})
       .then(ai => {
         // tslint:disable-next-line:no-unused-expression
         expect(isAsyncIterable(ai)).to.be.true;

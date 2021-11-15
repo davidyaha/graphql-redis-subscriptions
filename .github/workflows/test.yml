@@ -17,7 +17,7 @@ jobs:
       redis-cluster:
         image: grokzen/redis-cluster:latest
         ports:
-          - 7000:7000
+          - 7006:7000
           - 7001:7001
           - 7002:7002
           - 7003:7003

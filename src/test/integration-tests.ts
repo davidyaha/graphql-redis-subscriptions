@@ -126,7 +126,7 @@ describe('PubSubAsyncIterator', function() {
 
 
 describe('PubSubCluster', () => {
-    const nodes = [7000, 7001, 7002, 7003, 7004, 7005].map(port => ({ host: '127.0.0.1', port }));
+    const nodes = [7006, 7001, 7002, 7003, 7004, 7005].map(port => ({ host: '127.0.0.1', port }));
     const cluster = new Cluster(nodes);
     const eventKey = 'clusterEvtKey';
     const pubsub = new RedisPubSub({

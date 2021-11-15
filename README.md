@@ -274,7 +274,7 @@ This is one step towards lifting the load off of the GraphQL API server regardin
 Please refer to https://github.com/Grokzen/docker-redis-cluster documentation to start a cluster
 ```shell script
 $ docker run --rm -p 6379:6379 redis:alpine
-$ export REDIS_CLUSTER_IP=0.0.0.0; docker run -e "IP=0.0.0.0" --rm -p 7000:7000 -p 7001:7001 -p 7002:7002 -p 7003:7003 -p 7004:7004 -p 7005:7005 grokzen/redis-cluster
+$ export REDIS_CLUSTER_IP=0.0.0.0; docker run -e "IP=0.0.0.0" --rm -p 7006:7000 -p 7001:7001 -p 7002:7002 -p 7003:7003 -p 7004:7004 -p 7005:7005 grokzen/redis-cluster
 ```
 
 ### Test

@@ -108,7 +108,7 @@ export class RedisPubSub implements PubSubEngine {
           if (err) {
             reject(err);
           } else {
-            refs.add(id)
+            refs.add(id);
             resolve(id);
           }
         });
@@ -129,7 +129,7 @@ export class RedisPubSub implements PubSubEngine {
 
       this.subsRefsMap.delete(triggerName);
     } else {
-      refs.delete(subId)
+      refs.delete(subId);
     }
     delete this.subscriptionMap[subId];
   }

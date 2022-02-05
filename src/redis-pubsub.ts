@@ -1,7 +1,6 @@
 import {Cluster, Ok, Redis, RedisOptions} from 'ioredis';
-
-import {PubSubAsyncIterator} from './pubsub-async-iterator';
 import {PubSubEngine} from 'graphql-subscriptions';
+import {PubSubAsyncIterator} from './pubsub-async-iterator';
 
 type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
@@ -93,9 +92,13 @@ export class RedisPubSub implements PubSubEngine {
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
 
+    if (!this.subsRefsMap.has(triggerName)) {
+      this.subsRefsMap.set(triggerName, new Set());
+    }
+
     const refs = this.subsRefsMap.get(triggerName);
-    if (refs?.size > 0) {
-      refs.add(id)
+    if (refs.size > 0) {
+      refs.add(id);
       return Promise.resolve(id);
     } else {
       return new Promise<number>((resolve, reject) => {
@@ -105,7 +108,7 @@ export class RedisPubSub implements PubSubEngine {
           if (err) {
             reject(err);
           } else {
-            refs.add(id)
+            refs.add(id);
             resolve(id);
           }
         });
@@ -126,7 +129,7 @@ export class RedisPubSub implements PubSubEngine {
 
       this.subsRefsMap.delete(triggerName);
     } else {
-      refs.delete(subId)
+      refs.delete(subId);
     }
     delete this.subscriptionMap[subId];
   }
@@ -174,10 +177,10 @@ export class RedisPubSub implements PubSubEngine {
       parsedMessage = message;
     }
 
-    for (const subId in subscribers) {
+    subscribers.forEach(subId => {
       const [, listener] = this.subscriptionMap[subId];
       listener(parsedMessage);
-    }
+    });
   }
 }
 

@@ -1,4 +1,4 @@
-import {Cluster, Ok, Redis, RedisOptions} from 'ioredis';
+import {Cluster, Redis, RedisOptions} from 'ioredis';
 import {PubSubEngine} from 'graphql-subscriptions';
 import {PubSubAsyncIterator} from './pubsub-async-iterator';
 
@@ -152,7 +152,7 @@ export class RedisPubSub implements PubSubEngine {
     return this.redisPublisher;
   }
 
-  public close(): Promise<Ok[]> {
+  public close(): Promise<'OK'[]> {
     return Promise.all([
       this.redisPublisher.quit(),
       this.redisSubscriber.quit(),

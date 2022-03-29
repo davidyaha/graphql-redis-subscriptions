@@ -172,6 +172,28 @@ const pubsub = new RedisPubSub({
 
 You can learn more on the `ioredis` package [here](https://github.com/luin/ioredis).
 
+## Using a custom serializer/deserializer
+
+By default, Javascript objects are (de)serialized using the `JSON.stringify` and `JSON.parse` methods.
+You may pass your own serializer and/or deserializer function(s) as part of the options.
+
+The `deserializer` will be called with an extra context object containing `pattern` (if available) and `channel` properties, allowing you to access this information when subscribing to a pattern.
+
+```javascript
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { someSerializer, someDeserializer } from 'some-serializer-library';
+
+const serialize = (source) => {
+  return someSerializer(source);
+};
+
+const deserialize = (sourceOrBuffer, { channel, pattern }) => {
+  return someDeserializer(sourceOrBuffer, channel, pattern);
+};
+
+const pubSub = new RedisPubSub({ ..., serializer: serialize, deserializer: deserialize });
+```
+
 ## Using a custom reviver
 
 By default, Javascript objects are serialized using the `JSON.stringify` and `JSON.parse` methods.

@@ -4,6 +4,7 @@ import {PubSubAsyncIterator} from './pubsub-async-iterator';
 
 type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
+type DeserializerContext = { channel: string, pattern?: string };
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions;
@@ -178,7 +179,9 @@ export class RedisPubSub implements PubSubEngine {
 
     let parsedMessage;
     try {
-      parsedMessage = this.deserializer ? this.deserializer(message) : JSON.parse(message, this.reviver);
+      parsedMessage = this.deserializer
+        ? this.deserializer(message, { pattern, channel })
+        : JSON.parse(message, this.reviver);
     } catch (e) {
       parsedMessage = message;
     }
@@ -198,4 +201,4 @@ export type TriggerTransform = (
 ) => string;
 export type Reviver = (key: any, value: any) => any;
 export type Serializer = (source: any) => string;
-export type Deserializer = (source: string | Buffer) => any;
+export type Deserializer = (source: string | Buffer, context: DeserializerContext) => any;

@@ -57,7 +57,7 @@
     "eslint": "^7.7.0",
     "graphql": "^15.7.2",
     "graphql-subscriptions": "^2.0.0",
-    "ioredis": "^4.17.3",
+    "ioredis": "^5.1.0",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",
     "simple-mock": "^0.8.0",
@@ -65,7 +65,7 @@
     "typescript": "^4.0.2"
   },
   "optionalDependencies": {
-    "ioredis": "^4.17.3"
+    "ioredis": "^5.1.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

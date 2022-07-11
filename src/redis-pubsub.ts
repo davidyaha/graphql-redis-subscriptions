@@ -7,7 +7,7 @@ type OnMessage<T> = (message: T) => void;
 type DeserializerContext = { channel: string, pattern?: string };
 
 export interface PubSubRedisOptions {
-  connection?: RedisOptions;
+  connection?: RedisOptions | string;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
   publisher?: RedisClient;

@@ -2,7 +2,6 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { mock } from 'simple-mock';
 import { parse, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLFieldResolver } from 'graphql';
-import { isAsyncIterable } from 'iterall';
 import { subscribe } from 'graphql/subscription';
 
 import { RedisPubSub } from '../redis-pubsub';
@@ -83,7 +82,7 @@ describe('PubSubAsyncIterator', function() {
     subscribe({ schema, document: query})
       .then(ai => {
         // tslint:disable-next-line:no-unused-expression
-        expect(isAsyncIterable(ai)).to.be.true;
+				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
         const r = (ai as AsyncIterator<any>).next();
         setTimeout(() => pubsub.publish(FIRST_EVENT, {}), 50);
@@ -97,8 +96,8 @@ describe('PubSubAsyncIterator', function() {
   it('should allow pattern subscriptions', () =>
     subscribe({ schema, document: patternQuery })
       .then(ai => {
-        // tslint:disable-next-line:no-unused-expression
-        expect(isAsyncIterable(ai)).to.be.true;
+				// tslint:disable-next-line:no-unused-expression
+				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
         const r = (ai as AsyncIterator<any>).next();
         setTimeout(() => pubsub.publish(SECOND_EVENT, {}), 50);
@@ -112,8 +111,8 @@ describe('PubSubAsyncIterator', function() {
   it('should clear event handlers', () =>
     subscribe({ schema, document: query})
       .then(ai => {
-        // tslint:disable-next-line:no-unused-expression
-        expect(isAsyncIterable(ai)).to.be.true;
+				// tslint:disable-next-line:no-unused-expression
+				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
         pubsub.publish(FIRST_EVENT, {});
 

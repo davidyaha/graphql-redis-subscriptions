@@ -1,5 +1,3 @@
-import { $$asyncIterator } from 'iterall';
-
 export type FilterFn = (rootValue?: any, args?: any, context?: any, info?: any) => boolean;
 
 export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: FilterFn) => {
@@ -33,7 +31,7 @@ export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: 
       throw(error) {
         return asyncIterator.throw(error);
       },
-      [$$asyncIterator]() {
+      [Symbol.asyncIterator]() {
         return this;
       },
     } as any;

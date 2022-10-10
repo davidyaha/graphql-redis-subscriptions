@@ -1,4 +1,3 @@
-import { $$asyncIterator } from 'iterall';
 import { PubSubEngine } from 'graphql-subscriptions';
 
 /**
@@ -56,7 +55,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     return Promise.reject(error);
   }
 
-  public [$$asyncIterator]() {
+  public [Symbol.asyncIterator]() {
     return this;
   }
 

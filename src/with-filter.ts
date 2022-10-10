@@ -1,6 +1,6 @@
 export type FilterFn = (rootValue?: any, args?: any, context?: any, info?: any) => boolean;
 
-export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: FilterFn) => {
+export const withFilter = (asyncIteratorFn: () => AsyncIterableIterator<any>, filterFn: FilterFn) => {
   return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
     const asyncIterator = asyncIteratorFn();
 

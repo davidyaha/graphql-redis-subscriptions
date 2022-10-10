@@ -29,7 +29,7 @@ import { PubSubEngine } from 'graphql-subscriptions';
  * @property pubsub @type {PubSubEngine}
  * The PubSubEngine whose events will be observed.
  */
-export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
+export class PubSubAsyncIterator<T> implements AsyncIterableIterator<T> {
 
   constructor(pubsub: PubSubEngine, eventNames: string | string[], options?: unknown) {
     this.pubsub = pubsub;

@@ -1,7 +1,6 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { spy, restore, stub } from 'simple-mock';
-import { isAsyncIterable } from 'iterall';
 import { RedisPubSub } from '../redis-pubsub';
 import * as IORedis from 'ioredis';
 
@@ -429,9 +428,9 @@ describe('PubSubAsyncIterator', () => {
     const eventName = 'test';
     const iterator = pubSub.asyncIterator(eventName);
     // tslint:disable-next-line:no-unused-expression
-    expect(iterator).to.exist;
-    // tslint:disable-next-line:no-unused-expression
-    expect(isAsyncIterable(iterator)).to.be.true;
+		expect(iterator).to.exist;
+		// tslint:disable-next-line:no-unused-expression
+		expect(iterator[Symbol.asyncIterator]).not.to.be.undefined;
   });
 
   it('should trigger event on asyncIterator when published', done => {

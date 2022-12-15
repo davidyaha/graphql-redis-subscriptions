@@ -1,4 +1,3 @@
-import { $$asyncIterator } from 'iterall';
 import { PubSubEngine } from 'graphql-subscriptions';
 
 /**
@@ -30,7 +29,7 @@ import { PubSubEngine } from 'graphql-subscriptions';
  * @property pubsub @type {PubSubEngine}
  * The PubSubEngine whose events will be observed.
  */
-export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
+export class PubSubAsyncIterator<T> implements AsyncIterableIterator<T> {
 
   constructor(pubsub: PubSubEngine, eventNames: string | string[], options?: unknown) {
     this.pubsub = pubsub;
@@ -56,7 +55,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     return Promise.reject(error);
   }
 
-  public [$$asyncIterator]() {
+  public [Symbol.asyncIterator]() {
     return this;
   }
 

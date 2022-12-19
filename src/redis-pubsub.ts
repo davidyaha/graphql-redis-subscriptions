@@ -19,7 +19,7 @@ export interface PubSubRedisOptions {
   pmessageEventName?: string;
 }
 
-export class RedisPubSub implements PubSubEngine {
+export class RedisPubSub<Triggers = string> implements PubSubEngine {
 
   constructor(options: PubSubRedisOptions = {}) {
     const {
@@ -83,12 +83,12 @@ export class RedisPubSub implements PubSubEngine {
     this.currentSubscriptionId = 0;
   }
 
-  public async publish<T>(trigger: string, payload: T): Promise<void> {
+  public async publish<T>(trigger: Triggers, payload: T): Promise<void> {
     await this.redisPublisher.publish(trigger, this.serializer ? this.serializer(payload) : JSON.stringify(payload));
   }
 
   public subscribe<T = any>(
-    trigger: string,
+    trigger: Triggers,
     onMessage: OnMessage<T>,
     options: unknown = {},
   ): Promise<number> {
@@ -139,7 +139,7 @@ export class RedisPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
   }
 
-  public asyncIterator<T>(triggers: string | string[], options?: unknown): AsyncIterator<T> {
+  public asyncIterator<T>(triggers: Triggers | Triggers[], options?: unknown): AsyncIterator<T> {
     return new PubSubAsyncIterator<T>(this, triggers, options);
   }
 

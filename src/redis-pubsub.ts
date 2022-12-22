@@ -1,77 +1,24 @@
-import {Cluster, Redis, RedisOptions} from 'ioredis';
-import {PubSubEngine} from 'graphql-subscriptions';
-import {PubSubAsyncIterator} from './pubsub-async-iterator';
+import { OnMessage, PubSubRedisBaseOptions, RedisPubSubBase } from "./redis-pubsub-base";
 
-type RedisClient = Redis | Cluster;
-type OnMessage<T> = (message: T) => void;
-type DeserializerContext = { channel: string, pattern?: string };
-
-export interface PubSubRedisOptions {
-  connection?: RedisOptions | string;
-  triggerTransform?: TriggerTransform;
-  connectionListener?: (err: Error) => void;
-  publisher?: RedisClient;
-  subscriber?: RedisClient;
-  reviver?: Reviver;
-  serializer?: Serializer;
-  deserializer?: Deserializer;
+interface PubSubRedisSubscribeOptions {
   messageEventName?: string;
   pmessageEventName?: string;
 }
 
-export class RedisPubSub implements PubSubEngine {
+export type PubSubRedisOptions = PubSubRedisBaseOptions & PubSubRedisSubscribeOptions;
 
+/**
+ * Redis PubSub implementation that uses `subscribe` or `psubscribe` redis commands
+ * as the communication method.
+ */
+export class RedisPubSub extends RedisPubSubBase {
   constructor(options: PubSubRedisOptions = {}) {
+    super(options);
+
     const {
-      triggerTransform,
-      connection,
-      connectionListener,
-      subscriber,
-      publisher,
-      reviver,
-      serializer,
-      deserializer,
       messageEventName = 'message',
       pmessageEventName = 'pmessage',
     } = options;
-
-    this.triggerTransform = triggerTransform || (trigger => trigger as string);
-
-    if (reviver && deserializer) {
-      throw new Error("Reviver and deserializer can't be used together");
-    }
-
-    this.reviver = reviver;
-    this.serializer = serializer;
-    this.deserializer = deserializer;
-
-    if (subscriber && publisher) {
-      this.redisPublisher = publisher;
-      this.redisSubscriber = subscriber;
-    } else {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const IORedis = require('ioredis');
-        this.redisPublisher = new IORedis(connection);
-        this.redisSubscriber = new IORedis(connection);
-
-        if (connectionListener) {
-          this.redisPublisher
-              .on('connect', connectionListener)
-              .on('error', connectionListener);
-          this.redisSubscriber
-              .on('connect', connectionListener)
-              .on('error', connectionListener);
-        } else {
-          this.redisPublisher.on('error', console.error);
-          this.redisSubscriber.on('error', console.error);
-        }
-      } catch (error) {
-        console.error(
-          `No publisher or subscriber instances were provided and the package 'ioredis' wasn't found. Couldn't create Redis clients.`,
-        );
-      }
-    }
 
     // handle messages received via psubscribe and subscribe
     this.redisSubscriber.on(pmessageEventName, this.onMessage.bind(this));
@@ -80,7 +27,6 @@ export class RedisPubSub implements PubSubEngine {
 
     this.subscriptionMap = {};
     this.subsRefsMap = new Map<string, Set<number>>();
-    this.currentSubscriptionId = 0;
   }
 
   public async publish<T>(trigger: string, payload: T): Promise<void> {
@@ -138,36 +84,8 @@ export class RedisPubSub implements PubSubEngine {
     }
     delete this.subscriptionMap[subId];
   }
-
-  public asyncIterator<T>(triggers: string | string[], options?: unknown): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers, options);
-  }
-
-  public getSubscriber(): RedisClient {
-    return this.redisSubscriber;
-  }
-
-  public getPublisher(): RedisClient {
-    return this.redisPublisher;
-  }
-
-  public close(): Promise<'OK'[]> {
-    return Promise.all([
-      this.redisPublisher.quit(),
-      this.redisSubscriber.quit(),
-    ]);
-  }
-
-  private readonly serializer?: Serializer;
-  private readonly deserializer?: Deserializer;
-  private readonly triggerTransform: TriggerTransform;
-  private readonly redisSubscriber: RedisClient;
-  private readonly redisPublisher: RedisClient;
-  private readonly reviver: Reviver;
-
   private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>] };
   private readonly subsRefsMap: Map<string, Set<number>>;
-  private currentSubscriptionId: number;
 
   private onMessage(pattern: string, channel: string, message: string) {
     const subscribers = this.subsRefsMap.get(pattern || channel);
@@ -190,13 +108,3 @@ export class RedisPubSub implements PubSubEngine {
     });
   }
 }
-
-export type Path = Array<string | number>;
-export type Trigger = string | Path;
-export type TriggerTransform = (
-  trigger: Trigger,
-  channelOptions?: unknown,
-) => string;
-export type Reviver = (key: any, value: any) => any;
-export type Serializer = (source: any) => string;
-export type Deserializer = (source: string | Buffer, context: DeserializerContext) => any;

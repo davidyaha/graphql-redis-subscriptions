@@ -123,6 +123,29 @@ describe('PubSubAsyncIterator', function() {
       }));
 });
 
+describe('Subscribe to buffer', () => {
+  it('can publish buffers as well' , done => {
+    // when using messageBuffer, with redis instance the channel name is not a string but a buffer
+    const pubSub = new RedisPubSub({ messageEventName: 'messageBuffer'});
+    const payload = 'This is amazing';
+    pubSub.subscribe('Posts', message => {
+      try {
+        expect(message).to.be.instanceOf(Buffer);
+        expect(message.toString('utf-8')).to.be.equal(payload);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    }).then(async subId => {
+      try {
+        await pubSub.publish('Posts', Buffer.from(payload, 'utf-8'));
+        pubSub.unsubscribe(subId);
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+})
 
 describe('PubSubCluster', () => {
     const nodes = [7006, 7001, 7002, 7003, 7004, 7005].map(port => ({ host: '127.0.0.1', port }));

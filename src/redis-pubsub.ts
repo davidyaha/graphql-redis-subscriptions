@@ -84,7 +84,13 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public async publish<T>(trigger: string, payload: T): Promise<void> {
-    await this.redisPublisher.publish(trigger, this.serializer ? this.serializer(payload) : JSON.stringify(payload));
+    if(this.serializer) {
+      await this.redisPublisher.publish(trigger, this.serializer(payload));
+    } else if (payload instanceof Buffer){
+      await this.redisPublisher.publish(trigger, payload);
+    } else {
+      await this.redisPublisher.publish(trigger, JSON.stringify(payload));
+    }
   }
 
   public subscribe<T = any>(
@@ -169,7 +175,9 @@ export class RedisPubSub implements PubSubEngine {
   private readonly subsRefsMap: Map<string, Set<number>>;
   private currentSubscriptionId: number;
 
-  private onMessage(pattern: string, channel: string, message: string) {
+  private onMessage(pattern: string, channel: string | Buffer, message: string | Buffer) {
+    if(typeof channel === 'object') channel = channel.toString('utf8');
+
     const subscribers = this.subsRefsMap.get(pattern || channel);
 
     // Don't work for nothing..
@@ -177,9 +185,13 @@ export class RedisPubSub implements PubSubEngine {
 
     let parsedMessage;
     try {
-      parsedMessage = this.deserializer
-        ? this.deserializer(message, { pattern, channel })
-        : JSON.parse(message, this.reviver);
+      if(this.deserializer){
+        parsedMessage = this.deserializer(Buffer.from(message), { pattern, channel })
+      } else if(typeof message === 'string'){
+        parsedMessage = JSON.parse(message, this.reviver);
+      } else {
+        parsedMessage = message;
+      }
     } catch (e) {
       parsedMessage = message;
     }

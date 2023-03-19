@@ -140,6 +140,60 @@ describe('RedisPubSub', () => {
       });
   });
 
+  it('concurrent subscribe, unsubscribe first sub before second sub complete', done => {
+    const subs = {
+      first: null as Promise<number>,
+      second: null as Promise<number>,
+    }
+
+    let firstCb, secondCb
+    const redisSubCallback = (channel, cb) => {
+      process.nextTick(() => {
+        if (!firstCb) {
+          firstCb = () => cb(null, channel)
+          // Handling first call, init second sub
+          subs.second = pubSub.subscribe('Posts', () => null)
+          // Continue first sub callback
+          firstCb()
+        } else {
+          secondCb = () => cb(null, channel)
+        }
+      })
+    }
+    const subscribeStub = stub().callFn(redisSubCallback);
+    const mockRedisClientWithSubStub = {...mockRedisClient, ...{subscribe: subscribeStub}};
+    const mockOptionsWithSubStub = {...mockOptions, ...{subscriber: (mockRedisClientWithSubStub as any)}}
+    const pubSub = new RedisPubSub(mockOptionsWithSubStub);
+
+    // First leg of the test, init first sub and immediately unsubscribe. The second sub is triggered in the redis cb
+    // before the first promise sub complete
+    subs.first = pubSub.subscribe('Posts', () => null)
+      .then(subId => {
+        // This assertion is done against a private member, if you change the internals, you may want to change that
+        expect((pubSub as any).subscriptionMap[subId]).not.to.be.an('undefined');
+        pubSub.unsubscribe(subId);
+
+        // Continue second sub callback
+        subs.first.then(() => secondCb())
+        return subId;
+      });
+
+    // Second leg of the test, here we have unsubscribed from the first sub. We try unsubbing from the second sub
+    // as soon it is ready
+    subs.first
+      .then((subId) => {
+        // This assertion is done against a private member, if you change the internals, you may want to change that
+        expect((pubSub as any).subscriptionMap[subId]).to.be.an('undefined');
+        expect(() => pubSub.unsubscribe(subId)).to.throw(`There is no subscription of id "${subId}"`);
+
+        return subs.second.then(secondSubId => {
+          pubSub.unsubscribe(secondSubId);
+        })
+      .then(done)
+      .catch(done)
+    });
+  });
+
   it('will not unsubscribe from the redis channel if there is another subscriber on it\'s subscriber list', done => {
     const pubSub = new RedisPubSub(mockOptions);
     const subscriptionPromises = [

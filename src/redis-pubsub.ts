@@ -80,6 +80,7 @@ export class RedisPubSub implements PubSubEngine {
 
     this.subscriptionMap = {};
     this.subsRefsMap = new Map<string, Set<number>>();
+    this.subsPendingRefsMap = new Map<string, { refs: number[], pending: Promise<number> }>();
     this.currentSubscriptionId = 0;
   }
 
@@ -102,22 +103,44 @@ export class RedisPubSub implements PubSubEngine {
     }
 
     const refs = this.subsRefsMap.get(triggerName);
-    if (refs.size > 0) {
+
+    const pendingRefs = this.subsPendingRefsMap.get(triggerName)
+    if (pendingRefs != null) {
+      // A pending remote subscribe call is currently in flight, piggyback on it
+      pendingRefs.refs.push(id)
+      return pendingRefs.pending.then(() => id)
+    } else if (refs.size > 0) {
+      // Already actively subscribed to redis
       refs.add(id);
       return Promise.resolve(id);
     } else {
-      return new Promise<number>((resolve, reject) => {
+      // New subscription.
+      // Keep a pending state until the remote subscribe call is completed
+      const pending = new Deferred()
+      const subsPendingRefsMap = this.subsPendingRefsMap
+      subsPendingRefsMap.set(triggerName, { refs: [], pending });
+
+      const sub = new Promise<number>((resolve, reject) => {
         const subscribeFn = options['pattern'] ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
 
         subscribeFn.call(this.redisSubscriber, triggerName, err => {
           if (err) {
+            subsPendingRefsMap.delete(triggerName)
             reject(err);
           } else {
+            // Add ids of subscribe calls initiated when waiting for the remote call response
+            const pendingRefs = subsPendingRefsMap.get(triggerName)
+            pendingRefs.refs.forEach((id) => refs.add(id))
+            subsPendingRefsMap.delete(triggerName)
+
             refs.add(id);
             resolve(id);
           }
         });
       });
+      // Ensure waiting subscribe will complete
+      sub.then(pending.resolve).catch(pending.reject)
+      return sub;
     }
   }
 
@@ -167,6 +190,7 @@ export class RedisPubSub implements PubSubEngine {
 
   private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>] };
   private readonly subsRefsMap: Map<string, Set<number>>;
+  private readonly subsPendingRefsMap: Map<string, { refs: number[], pending: Promise<number> }>;
   private currentSubscriptionId: number;
 
   private onMessage(pattern: string, channel: string, message: string) {
@@ -188,6 +212,19 @@ export class RedisPubSub implements PubSubEngine {
       const [, listener] = this.subscriptionMap[subId];
       listener(parsedMessage);
     });
+  }
+}
+
+// Unexported deferrable promise used to complete waiting subscribe calls
+function Deferred() {
+  const p = this.promise = new Promise((resolve, reject) => {
+    this.resolve = resolve;
+    this.reject = reject;
+  });
+  this.then = p.then.bind(p);
+  this.catch = p.catch.bind(p);
+  if (p.finally) {
+    this.finally = p.finally.bind(p);
   }
 }
 

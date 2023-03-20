@@ -141,9 +141,9 @@ describe('RedisPubSub', () => {
   });
 
   it('concurrent subscribe, unsubscribe first sub before second sub complete', done => {
-    const subs = {
-      first: null as Promise<number>,
-      second: null as Promise<number>,
+    const promises = {
+      firstSub: null as Promise<number>,
+      secondSub: null as Promise<number>,
     }
 
     let firstCb, secondCb
@@ -152,7 +152,7 @@ describe('RedisPubSub', () => {
         if (!firstCb) {
           firstCb = () => cb(null, channel)
           // Handling first call, init second sub
-          subs.second = pubSub.subscribe('Posts', () => null)
+          promises.secondSub = pubSub.subscribe('Posts', () => null)
           // Continue first sub callback
           firstCb()
         } else {
@@ -167,26 +167,26 @@ describe('RedisPubSub', () => {
 
     // First leg of the test, init first sub and immediately unsubscribe. The second sub is triggered in the redis cb
     // before the first promise sub complete
-    subs.first = pubSub.subscribe('Posts', () => null)
+    promises.firstSub = pubSub.subscribe('Posts', () => null)
       .then(subId => {
         // This assertion is done against a private member, if you change the internals, you may want to change that
         expect((pubSub as any).subscriptionMap[subId]).not.to.be.an('undefined');
         pubSub.unsubscribe(subId);
 
         // Continue second sub callback
-        subs.first.then(() => secondCb())
+        promises.firstSub.then(() => secondCb())
         return subId;
       });
 
     // Second leg of the test, here we have unsubscribed from the first sub. We try unsubbing from the second sub
     // as soon it is ready
-    subs.first
+    promises.firstSub
       .then((subId) => {
         // This assertion is done against a private member, if you change the internals, you may want to change that
         expect((pubSub as any).subscriptionMap[subId]).to.be.an('undefined');
         expect(() => pubSub.unsubscribe(subId)).to.throw(`There is no subscription of id "${subId}"`);
 
-        return subs.second.then(secondSubId => {
+        return promises.secondSub.then(secondSubId => {
           pubSub.unsubscribe(secondSubId);
         })
       .then(done)

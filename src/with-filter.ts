@@ -1,5 +1,10 @@
 export type FilterFn = (rootValue?: any, args?: any, context?: any, info?: any) => boolean;
 
+/**
+ * Wraps an async-iterator and filters incoming events based on the provided filter function.
+ * Note: Due to promise chaining this function can use a large amount of memory when a high percentage of messages are filtered
+ * If using the PubSubAsyncIterator, use the filterFn property directly
+ */
 export const withFilter = (asyncIteratorFn: () => AsyncIterableIterator<any>, filterFn: FilterFn) => {
   return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
     const asyncIterator = asyncIteratorFn();

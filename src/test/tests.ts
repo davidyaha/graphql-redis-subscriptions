@@ -451,6 +451,26 @@ describe('PubSubAsyncIterator', () => {
     pubSub.publish(eventName, { test: true });
   });
 
+  it('should only publish filtered events', done => {
+    const pubSub = new RedisPubSub(mockOptions);
+    const eventName = 'test';
+    const iterator = pubSub.asyncIterator(eventName, undefined, (eventData) => eventData.filtered === false);
+
+    iterator.next().then(result => {
+      // tslint:disable-next-line:no-unused-expression
+      expect(result).to.exist;
+      // tslint:disable-next-line:no-unused-expression
+      expect(result.value).to.exist;
+      // tslint:disable-next-line:no-unused-expression
+      expect(result.done).to.exist;
+      expect(result.value.filtered).to.equal(false);
+      done();
+    });
+
+    pubSub.publish(eventName, { filtered: true });
+    pubSub.publish(eventName, { filtered: false });
+  });
+
   it('should not trigger event on asyncIterator when publishing other event', async () => {
     const pubSub = new RedisPubSub(mockOptions);
     const eventName = 'test2';

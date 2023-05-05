@@ -1,4 +1,5 @@
 import { PubSubEngine } from 'graphql-subscriptions';
+import { FilterFn } from './with-filter';
 
 /**
  * A class for digesting PubSubEngine events via the new AsyncIterator interface.
@@ -31,9 +32,10 @@ import { PubSubEngine } from 'graphql-subscriptions';
  */
 export class PubSubAsyncIterator<T> implements AsyncIterableIterator<T> {
 
-  constructor(pubsub: PubSubEngine, eventNames: string | string[], options?: unknown) {
+  constructor(pubsub: PubSubEngine, eventNames: string | string[], options?: unknown, filterFn?: FilterFn) {
     this.pubsub = pubsub;
     this.options = options;
+    this.filterFn = filterFn;
     this.pullQueue = [];
     this.pushQueue = [];
     this.listening = true;
@@ -66,9 +68,14 @@ export class PubSubAsyncIterator<T> implements AsyncIterableIterator<T> {
   private listening: boolean;
   private pubsub: PubSubEngine;
   private options: unknown;
+  private filterFn: FilterFn | undefined;
 
   private async pushValue(event) {
     await this.subscribeAll();
+    if (this.filterFn) {
+      const filterResult = await this.filterFn(event, 0);
+      if (!filterResult) return;
+    }
     if (this.pullQueue.length !== 0) {
       this.pullQueue.shift()({ value: event, done: false });
     } else {

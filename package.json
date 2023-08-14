@@ -52,7 +52,7 @@
     "chai-as-promised": "^7.1.1",
     "eslint": "^8.23.0",
     "graphql": "^15.7.2",
-    "graphql-subscriptions": "^2.0.0",
+    "graphql-subscriptions-continued": "^3.0.0",
     "ioredis": "^5.2.4",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",

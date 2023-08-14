@@ -1,6 +1,5 @@
 import {Cluster, Redis, RedisOptions} from 'ioredis';
-import {PubSubEngine} from 'graphql-subscriptions';
-import {PubSubAsyncIterator} from './pubsub-async-iterator';
+import {PubSubEngine, PubSubAsyncIterableIterator} from 'graphql-subscriptions-continued';
 
 type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
@@ -19,9 +18,11 @@ export interface PubSubRedisOptions {
   pmessageEventName?: string;
 }
 
-export class RedisPubSub implements PubSubEngine {
+export class RedisPubSub extends PubSubEngine {
 
   constructor(options: PubSubRedisOptions = {}) {
+    super();
+
     const {
       triggerTransform,
       connection,
@@ -139,8 +140,8 @@ export class RedisPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
   }
 
-  public asyncIterator<T>(triggers: string | string[], options?: unknown): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers, options);
+  public asyncIterator<T>(triggers: string | string[], options?: unknown) {
+    return new PubSubAsyncIterableIterator<T>(this, triggers, options);
   }
 
   public getSubscriber(): RedisClient {

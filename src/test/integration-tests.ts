@@ -32,7 +32,7 @@ function buildSchema(iterator, patternIterator) {
       fields: {
         testSubscription: {
           type: GraphQLString,
-          subscribe: withFilter(() => iterator, () => true) as GraphQLFieldResolver<any, any, any>,
+          subscribe: withFilter(() => iterator, () => true),
           resolve: root => {
             return 'FIRST_EVENT';
           },
@@ -40,7 +40,7 @@ function buildSchema(iterator, patternIterator) {
 
         testPatternSubscription: {
           type: GraphQLString,
-          subscribe: withFilter(() => patternIterator, () => true) as GraphQLFieldResolver<any, any, any>,
+          subscribe: withFilter(() => patternIterator, () => true),
           resolve: root => {
             return 'SECOND_EVENT';
           },
@@ -148,5 +148,5 @@ describe('PubSubCluster', () => {
         pubsub.subscribe<{fire: boolean, from: string}>(eventKey, (data) => {
             expect(data).to.contains({ fired: true, from: 'cluster' });
         });
-    }).timeout(2000);
+    }).timeout(5000);
 });

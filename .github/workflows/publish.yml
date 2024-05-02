@@ -7,6 +7,11 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+    
     services:
       redis:
         image: redis
@@ -21,6 +26,7 @@ jobs:
           - 7003:7003
           - 7004:7004
           - 7005:7005
+    
     strategy:
       matrix:
         node-version: [lts/*]

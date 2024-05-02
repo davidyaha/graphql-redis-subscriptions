@@ -140,8 +140,8 @@ describe('Subscribe to buffer', () => {
       }
     }).then(async subId => {
       try {
-        await pubSub.publish('Posts', Buffer.from(payload, 'utf-8'));
         subId = subId;
+        await pubSub.publish('Posts', Buffer.from(payload, 'utf-8'));
       } catch (e) {
         done(e);
       }

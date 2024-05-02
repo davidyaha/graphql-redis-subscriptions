@@ -128,19 +128,17 @@ describe('Subscribe to buffer', () => {
     // when using messageBuffer, with redis instance the channel name is not a string but a buffer
     const pubSub = new RedisPubSub({ messageEventName: 'messageBuffer'});
     const payload = 'This is amazing';
-    let subId;
+    
     pubSub.subscribe('Posts', message => {
       try {
         expect(message).to.be.instanceOf(Buffer);
         expect(message.toString('utf-8')).to.be.equal(payload);
-        pubSub.unsubscribe(subId);
         done();
       } catch (e) {
         done(e);
       }
     }).then(async subId => {
       try {
-        subId = subId;
         await pubSub.publish('Posts', Buffer.from(payload, 'utf-8'));
       } catch (e) {
         done(e);

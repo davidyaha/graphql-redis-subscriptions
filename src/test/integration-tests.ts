@@ -139,7 +139,7 @@ describe('Subscribe to buffer', () => {
     }).then(async subId => {
       try {
         await pubSub.publish('Posts', Buffer.from(payload, 'utf-8'));
-        pubSub.unsubscribe(subId);
+        // pubSub.unsubscribe(subId);
       } catch (e) {
         done(e);
       }

@@ -128,7 +128,7 @@ describe('Subscribe to buffer', () => {
     // when using messageBuffer, with redis instance the channel name is not a string but a buffer
     const pubSub = new RedisPubSub({ messageEventName: 'messageBuffer'});
     const payload = 'This is amazing';
-    
+
     pubSub.subscribe('Posts', message => {
       try {
         expect(message).to.be.instanceOf(Buffer);
@@ -173,3 +173,38 @@ describe('PubSubCluster', () => {
         });
     }).timeout(2000);
 });
+
+
+describe("Don't transform wanted types", () => {
+  it('base64 string in serializer' , done => {
+    const payload = 'This is amazing';
+
+    // when using messageBuffer, with redis instance the channel name is not a string but a buffer
+    const pubSub = new RedisPubSub({
+      // messageEventName: 'messageBuffer',
+      serializer: v => Buffer.from(v).toString('base64'),
+      deserializer: v => {
+        if (typeof v === 'string') {
+          return Buffer.from(v, 'base64').toString('utf-8');
+        }
+
+        throw new Error('Invalid data');
+      }
+    });
+
+    pubSub.subscribe('Posts', message => {
+      try {
+        expect(message).to.be.equal(payload);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    }).then(async subId => {
+      try {
+        await pubSub.publish('Posts', payload);
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+})

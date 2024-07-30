@@ -1,10 +1,18 @@
 import {Cluster, Redis, RedisOptions} from 'ioredis';
 import {PubSubEngine} from 'graphql-subscriptions';
 import {PubSubAsyncIterator} from './pubsub-async-iterator';
+import { RedisPubSubPipeline } from "./redis-pipeline";
 
-type RedisClient = Redis | Cluster;
+export type RedisClient = Redis | Cluster;
 type OnMessage<T> = (message: T) => void;
 type DeserializerContext = { channel: string, pattern?: string };
+
+function defaultSerializer(payload: unknown): string | Buffer {
+  if (payload instanceof Buffer) {
+    return payload;
+  }
+  return JSON.stringify(payload);
+}
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions | string;
@@ -29,8 +37,8 @@ export class RedisPubSub implements PubSubEngine {
       subscriber,
       publisher,
       reviver,
-      serializer,
       deserializer,
+      serializer = defaultSerializer,
       messageEventName = 'message',
       pmessageEventName = 'pmessage',
     } = options;
@@ -85,13 +93,14 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public async publish<T>(trigger: string, payload: T): Promise<void> {
-    if(this.serializer) {
-      await this.redisPublisher.publish(trigger, this.serializer(payload));
-    } else if (payload instanceof Buffer){
-      await this.redisPublisher.publish(trigger, payload);
-    } else {
-      await this.redisPublisher.publish(trigger, JSON.stringify(payload));
-    }
+    await this.redisPublisher.publish(trigger, this.serializer(payload));
+  }
+
+  public pipeline() {
+    return new RedisPubSubPipeline({
+      publisher: this.redisPublisher,
+      serializer: this.serializer,
+    });
   }
 
   public subscribe<T = any>(
@@ -187,7 +196,7 @@ export class RedisPubSub implements PubSubEngine {
     ]);
   }
 
-  private readonly serializer?: Serializer;
+  private readonly serializer: Serializer;
   private readonly deserializer?: Deserializer;
   private readonly triggerTransform: TriggerTransform;
   private readonly redisSubscriber: RedisClient;
@@ -247,5 +256,5 @@ export type TriggerTransform = (
   channelOptions?: unknown,
 ) => string;
 export type Reviver = (key: any, value: any) => any;
-export type Serializer = (source: any) => string;
+export type Serializer = (source: unknown) => string | Buffer;
 export type Deserializer = (source: string | Buffer, context: DeserializerContext) => any;

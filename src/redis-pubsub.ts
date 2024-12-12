@@ -168,7 +168,11 @@ export class RedisPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
   }
 
-  public asyncIterator<T>(triggers: string | string[], options?: unknown): AsyncIterator<T> {
+  public asyncIterator<T>(triggers: string | string[], options?: unknown) {
+    return new PubSubAsyncIterator<T>(this, triggers, options);
+  }
+
+  public asyncIterableIterator<T>(triggers: string | string[], options?: unknown) {
     return new PubSubAsyncIterator<T>(this, triggers, options);
   }
 

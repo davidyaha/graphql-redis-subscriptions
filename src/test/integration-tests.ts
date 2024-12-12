@@ -64,8 +64,8 @@ describe('PubSubAsyncIterator', function() {
   `);
 
   const pubsub = new RedisPubSub();
-  const origIterator = pubsub.asyncIterator(FIRST_EVENT);
-  const origPatternIterator = pubsub.asyncIterator('SECOND*', { pattern: true });
+  const origIterator = pubsub.asyncIterableIterator(FIRST_EVENT);
+  const origPatternIterator = pubsub.asyncIterableIterator('SECOND*', { pattern: true });
   const returnSpy = mock(origIterator, 'return');
   const schema = buildSchema(origIterator, origPatternIterator);
 
@@ -128,7 +128,7 @@ describe('Subscribe to buffer', () => {
     // when using messageBuffer, with redis instance the channel name is not a string but a buffer
     const pubSub = new RedisPubSub({ messageEventName: 'messageBuffer'});
     const payload = 'This is amazing';
-    
+
     pubSub.subscribe('Posts', message => {
       try {
         expect(message).to.be.instanceOf(Buffer);

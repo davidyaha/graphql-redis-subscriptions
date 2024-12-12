@@ -534,18 +534,18 @@ describe("RedisPubSub", () => {
 describe("PubSubAsyncIterator", () => {
   it("should expose valid asyncItrator for a specific event", () => {
     const pubSub = new RedisPubSub(mockOptions);
-    const eventName = "test";
-    const iterator = pubSub.asyncIterator(eventName);
+    const eventName = 'test';
+    const iterator = pubSub.asyncIterableIterator(eventName);
     // tslint:disable-next-line:no-unused-expression
     expect(iterator).to.exist;
     // tslint:disable-next-line:no-unused-expression
     expect(iterator[Symbol.asyncIterator]).not.to.be.undefined;
   });
 
-  it("should trigger event on asyncIterator when published", (done) => {
+  it('should trigger event on asyncIterableIterator when published', done => {
     const pubSub = new RedisPubSub(mockOptions);
-    const eventName = "test";
-    const iterator = pubSub.asyncIterator(eventName);
+    const eventName = 'test';
+    const iterator = pubSub.asyncIterableIterator(eventName);
 
     iterator.next().then((result) => {
       // tslint:disable-next-line:no-unused-expression
@@ -560,10 +560,10 @@ describe("PubSubAsyncIterator", () => {
     pubSub.publish(eventName, { test: true });
   });
 
-  it("should not trigger event on asyncIterator when publishing other event", async () => {
+  it('should not trigger event on asyncIterableIterator when publishing other event', async () => {
     const pubSub = new RedisPubSub(mockOptions);
-    const eventName = "test2";
-    const iterator = pubSub.asyncIterator("test");
+    const eventName = 'test2';
+    const iterator = pubSub.asyncIterableIterator('test');
     const triggerSpy = spy(() => undefined);
 
     iterator.next().then(triggerSpy);
@@ -573,8 +573,8 @@ describe("PubSubAsyncIterator", () => {
 
   it("register to multiple events", (done) => {
     const pubSub = new RedisPubSub(mockOptions);
-    const eventName = "test2";
-    const iterator = pubSub.asyncIterator(["test", "test2"]);
+    const eventName = 'test2';
+    const iterator = pubSub.asyncIterableIterator(['test', 'test2']);
     const triggerSpy = spy(() => undefined);
 
     iterator.next().then(() => {
@@ -585,10 +585,10 @@ describe("PubSubAsyncIterator", () => {
     pubSub.publish(eventName, { test: true });
   });
 
-  it("should not trigger event on asyncIterator already returned", (done) => {
+  it('should not trigger event on asyncIterableIterator already returned', done => {
     const pubSub = new RedisPubSub(mockOptions);
-    const eventName = "test";
-    const iterator = pubSub.asyncIterator<any>(eventName);
+    const eventName = 'test';
+    const iterator = pubSub.asyncIterableIterator<any>(eventName);
 
     iterator.next().then((result) => {
       // tslint:disable-next-line:no-unused-expression

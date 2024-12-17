@@ -42,7 +42,7 @@
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/chai": "^4.2.12",
-    "@types/chai-as-promised": "^7.1.3",
+    "@types/chai-as-promised": "^8.0.1",
     "@types/ioredis": "^5.0.0",
     "@types/mocha": "^9.1.1",
     "@types/node": "22.10.2",
@@ -50,7 +50,7 @@
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
     "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
+    "chai-as-promised": "^8.0.1",
     "eslint": "^8.57.1",
     "graphql": "^16.6.0",
     "graphql-subscriptions": "^3.0.0",

@@ -257,6 +257,35 @@ pubSub.subscribe('Test', message => {
 });
 ```
 
+## Use a pipeline to batch publish calls
+
+If you need to publish a number of triggers at the same time, you can batch them in a single HTTP request to redis using the pub/sub pipeline:
+
+```javascript
+const pubSub = new RedisPubSub({ ... });
+
+// Create pipeline
+const pipeline = pubSub.pipeline();
+
+[1,2,3,4,5,6].forEach((id) => pipeline.publish('Test', {id}))
+
+// Execute the pipeline to redis
+await pipeline.exec();
+```
+
+The publish method is also chainable.
+
+```javascript
+const pubSub = new RedisPubSub({ ... });
+const pipeline = pubSub.pipeline();
+
+await pipeline
+  .publish('Test1', {})
+  .publish('Test2', {})
+  .publish('Test3', {})
+  .exec();
+```
+
 ## Old Usage (Deprecated)
 
 ```javascript

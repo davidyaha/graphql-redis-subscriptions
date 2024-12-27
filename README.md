@@ -350,6 +350,24 @@ The subscription string that Redis will receive will be `comments.added.graphql-
 This subscription string is much more specific and means the the filtering required for this type of subscription is not needed anymore.
 This is one step towards lifting the load off of the GraphQL API server regarding subscriptions.
 
+## Publishing New Versions
+
+This package uses GitHub Actions for automated publishing. To publish a new version:
+
+1. Go to the GitHub repository
+2. Click "Releases" in the right sidebar
+3. Click "Draft a new release"
+4. Choose or create a new tag (e.g., v2.7.1)
+5. Fill in the release title and description
+6. Click "Publish release"
+
+The GitHub Action will automatically:
+- Run tests
+- Build the package
+- Publish to npm with provenance
+
+You can verify the published version on [npm](https://www.npmjs.com/package/graphql-redis-subscriptions).
+
 ## Tests
 
 ### Spin a Redis in docker server and cluster

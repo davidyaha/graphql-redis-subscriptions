@@ -117,6 +117,26 @@ describe('RedisPubSub', () => {
     });
   });
 
+  it('skips punsubscribe when skipPunsubscribe is set to true', done => {
+    const pubSub = new RedisPubSub({...mockOptions, skipPunsubscribe: true});
+    pubSub.subscribe('Posts', () => null).then(subId => {
+      pubSub.unsubscribe(subId);
+
+      try {
+
+        expect(unsubscribeSpy.callCount).to.equals(1);
+        expect(unsubscribeSpy.lastCall.args).to.have.members(['Posts']);
+
+        expect(punsubscribeSpy.callCount).to.equals(0);
+
+        done();
+
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
   it('cleans up correctly the memory when unsubscribing', done => {
     const pubSub = new RedisPubSub(mockOptions);
     Promise.all([

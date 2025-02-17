@@ -28,7 +28,7 @@
   "scripts": {
     "compile": "tsc",
     "test": "npm run coverage && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint",
     "watch": "tsc -w",
     "testonly": "mocha --reporter spec src/test/tests.ts",
     "integration": "mocha --reporter spec src/test/integration-tests.ts",
@@ -47,11 +47,10 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "22.10.2",
     "@types/simple-mock": "^0.8.1",
-    "@typescript-eslint/eslint-plugin": "^8.18.0",
-    "@typescript-eslint/parser": "^8.18.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^8.57.1",
+    "eslint": "^9.20.1",
+    "globals": "^16.0.0",
     "graphql": "^16.6.0",
     "graphql-subscriptions": "^3.0.0",
     "ioredis": "^5.3.2",
@@ -59,7 +58,8 @@
     "nyc": "^17.1.0",
     "simple-mock": "^0.8.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.24.1"
   },
   "optionalDependencies": {
     "ioredis": "^5.3.2"

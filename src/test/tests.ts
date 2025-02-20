@@ -96,7 +96,7 @@ describe('RedisPubSub', () => {
     });
   });
 
-  it('can unsubscribe from specific redis channel', done => {
+  it('can unsubscribe from specific redis channel with pattern matching disabled', done => {
     const pubSub = new RedisPubSub(mockOptions);
     pubSub.subscribe('Posts', () => null).then(subId => {
       pubSub.unsubscribe(subId);
@@ -105,6 +105,25 @@ describe('RedisPubSub', () => {
 
         expect(unsubscribeSpy.callCount).to.equals(1);
         expect(unsubscribeSpy.lastCall.args).to.have.members(['Posts']);
+
+        expect(punsubscribeSpy.callCount).to.equals(0);
+
+        done();
+
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
+  it('can unsubscribe from specific redis channel with pattern matching enabled', done => {
+    const pubSub = new RedisPubSub(mockOptions);
+    pubSub.subscribe('Posts', () => null, { pattern: true }).then(subId => {
+      pubSub.unsubscribe(subId);
+
+      try {
+
+        expect(unsubscribeSpy.callCount).to.equals(0);
 
         expect(punsubscribeSpy.callCount).to.equals(1);
         expect(punsubscribeSpy.lastCall.args).to.have.members(['Posts']);

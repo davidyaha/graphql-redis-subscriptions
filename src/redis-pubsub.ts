@@ -102,7 +102,8 @@ export class RedisPubSub implements PubSubEngine {
 
     const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
-    this.subscriptionMap[id] = [triggerName, onMessage];
+    const patternSubscription: boolean = !!options['pattern'];
+    this.subscriptionMap[id] = [triggerName, onMessage, patternSubscription];
 
     if (!this.subsRefsMap.has(triggerName)) {
       this.subsRefsMap.set(triggerName, new Set());
@@ -127,7 +128,7 @@ export class RedisPubSub implements PubSubEngine {
       subsPendingRefsMap.set(triggerName, { refs: [], pending });
 
       const sub = new Promise<number>((resolve, reject) => {
-        const subscribeFn = options['pattern'] ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
+        const subscribeFn = patternSubscription ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
 
         subscribeFn.call(this.redisSubscriber, triggerName, err => {
           if (err) {
@@ -151,15 +152,18 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public unsubscribe(subId: number): void {
-    const [triggerName = null] = this.subscriptionMap[subId] || [];
+    const [triggerName = null,, patternSubscription] = this.subscriptionMap[subId] || [];
     const refs = this.subsRefsMap.get(triggerName);
 
     if (!refs) throw new Error(`There is no subscription of id "${subId}"`);
 
     if (refs.size === 1) {
       // unsubscribe from specific channel and pattern match
-      this.redisSubscriber.unsubscribe(triggerName);
-      this.redisSubscriber.punsubscribe(triggerName);
+      if (patternSubscription) {
+        this.redisSubscriber.punsubscribe(triggerName);
+      } else {
+        this.redisSubscriber.unsubscribe(triggerName);
+      }
 
       this.subsRefsMap.delete(triggerName);
     } else {
@@ -198,7 +202,7 @@ export class RedisPubSub implements PubSubEngine {
   private readonly redisPublisher: RedisClient;
   private readonly reviver: Reviver;
 
-  private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>] };
+  private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>, patternSubscription: boolean] };
   private readonly subsRefsMap: Map<string, Set<number>>;
   private readonly subsPendingRefsMap: Map<string, { refs: number[], pending: Promise<number> }>;
   private currentSubscriptionId: number;

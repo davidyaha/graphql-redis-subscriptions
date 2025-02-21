@@ -81,7 +81,7 @@ describe('PubSubAsyncIterator', function() {
   it('should allow subscriptions', () =>
     subscribe({ schema, document: query})
       .then(ai => {
-        // tslint:disable-next-line:no-unused-expression
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
         const r = (ai as AsyncIterator<any>).next();
@@ -96,7 +96,7 @@ describe('PubSubAsyncIterator', function() {
   it('should allow pattern subscriptions', () =>
     subscribe({ schema, document: patternQuery })
       .then(ai => {
-				// tslint:disable-next-line:no-unused-expression
+				// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
         const r = (ai as AsyncIterator<any>).next();
@@ -111,7 +111,7 @@ describe('PubSubAsyncIterator', function() {
   it('should clear event handlers', () =>
     subscribe({ schema, document: query})
       .then(ai => {
-				// tslint:disable-next-line:no-unused-expression
+				// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
         pubsub.publish(FIRST_EVENT, {});

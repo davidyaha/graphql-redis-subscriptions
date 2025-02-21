@@ -481,9 +481,9 @@ describe('PubSubAsyncIterator', () => {
     const pubSub = new RedisPubSub(mockOptions);
     const eventName = 'test';
     const iterator = pubSub.asyncIterableIterator(eventName);
-    // tslint:disable-next-line:no-unused-expression
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		expect(iterator).to.exist;
-		// tslint:disable-next-line:no-unused-expression
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		expect(iterator[Symbol.asyncIterator]).not.to.be.undefined;
   });
 
@@ -493,11 +493,11 @@ describe('PubSubAsyncIterator', () => {
     const iterator = pubSub.asyncIterableIterator(eventName);
 
     iterator.next().then(result => {
-      // tslint:disable-next-line:no-unused-expression
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(result).to.exist;
-      // tslint:disable-next-line:no-unused-expression
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(result.value).to.exist;
-      // tslint:disable-next-line:no-unused-expression
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(result.done).to.exist;
       done();
     });
@@ -536,22 +536,22 @@ describe('PubSubAsyncIterator', () => {
     const iterator = pubSub.asyncIterableIterator<any>(eventName);
 
     iterator.next().then(result => {
-      // tslint:disable-next-line:no-unused-expression
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(result).to.exist;
-      // tslint:disable-next-line:no-unused-expression
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(result.value).to.exist;
       expect(result.value.test).to.equal('word');
-      // tslint:disable-next-line:no-unused-expression
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(result.done).to.be.false;
     });
 
     pubSub.publish(eventName, { test: 'word' }).then(() => {
       iterator.next().then(result => {
-        // tslint:disable-next-line:no-unused-expression
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         expect(result).to.exist;
-        // tslint:disable-next-line:no-unused-expression
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         expect(result.value).not.to.exist;
-        // tslint:disable-next-line:no-unused-expression
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         expect(result.done).to.be.true;
         done();
       });

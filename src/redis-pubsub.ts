@@ -17,6 +17,7 @@ export interface PubSubRedisOptions {
   deserializer?: Deserializer;
   messageEventName?: string;
   pmessageEventName?: string;
+  skipPunsubscribe?: boolean;
 }
 
 export class RedisPubSub implements PubSubEngine {
@@ -33,6 +34,7 @@ export class RedisPubSub implements PubSubEngine {
       deserializer,
       messageEventName = 'message',
       pmessageEventName = 'pmessage',
+      skipPunsubscribe = false,
     } = options;
 
     this.triggerTransform = triggerTransform || (trigger => trigger as string);
@@ -44,6 +46,7 @@ export class RedisPubSub implements PubSubEngine {
     this.reviver = reviver;
     this.serializer = serializer;
     this.deserializer = deserializer;
+    this.skipPunsubscribe = skipPunsubscribe;
 
     if (subscriber && publisher) {
       this.redisPublisher = publisher;
@@ -159,7 +162,9 @@ export class RedisPubSub implements PubSubEngine {
     if (refs.size === 1) {
       // unsubscribe from specific channel and pattern match
       this.redisSubscriber.unsubscribe(triggerName);
-      this.redisSubscriber.punsubscribe(triggerName);
+      if (!this.skipPunsubscribe) {
+        this.redisSubscriber.punsubscribe(triggerName);
+      }
 
       this.subsRefsMap.delete(triggerName);
     } else {
@@ -197,6 +202,7 @@ export class RedisPubSub implements PubSubEngine {
   private readonly redisSubscriber: RedisClient;
   private readonly redisPublisher: RedisClient;
   private readonly reviver: Reviver;
+  private readonly skipPunsubscribe: boolean;
 
   private readonly subscriptionMap: { [subId: number]: [string, OnMessage<unknown>] };
   private readonly subsRefsMap: Map<string, Set<number>>;

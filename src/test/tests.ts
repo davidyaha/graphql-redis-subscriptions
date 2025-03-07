@@ -2,6 +2,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { spy, restore, stub } from 'simple-mock';
 import { RedisPubSub } from '../redis-pubsub';
+import { RedisPubSubPipeline } from "../redis-pipeline";
 import * as IORedis from 'ioredis';
 
 chai.use(chaiAsPromised);
@@ -17,6 +18,9 @@ const unsubscribeSpy = spy((channel, cb) => cb && cb(channel));
 const psubscribeSpy = spy((channel, cb) => cb && cb(null, channel));
 const punsubscribeSpy = spy((channel, cb) => cb && cb(channel));
 
+const pipelinePublishSpy = spy(() => {});
+const pipelineExecSpy = spy(() => Promise.resolve());
+const pipelineSpy = spy(() => mockPipelineClient);
 const quitSpy = spy(cb => cb);
 const mockRedisClient = {
   publish: publishSpy,
@@ -24,12 +28,17 @@ const mockRedisClient = {
   unsubscribe: unsubscribeSpy,
   psubscribe: psubscribeSpy,
   punsubscribe: punsubscribeSpy,
+  pipeline: pipelineSpy,
   on: (event, cb) => {
     if (event === 'message') {
       listener = cb;
     }
   },
   quit: quitSpy,
+};
+const mockPipelineClient = {
+  publish: pipelinePublishSpy,
+  exec: pipelineExecSpy,
 };
 const mockOptions = {
   publisher: (mockRedisClient as any),
@@ -459,6 +468,13 @@ describe('RedisPubSub', () => {
 
   });
 
+  it('creates a pipline', (done) => {
+    const pubSub = new RedisPubSub(mockOptions);
+    const pipeline = pubSub.pipeline();
+    expect(pipeline).to.be.an.instanceOf(RedisPubSubPipeline);
+    done();
+  });
+
   // TODO pattern subs
 
   afterEach('Reset spy count', () => {
@@ -561,4 +577,50 @@ describe('PubSubAsyncIterator', () => {
     });
   });
 
+});
+
+describe('RedisPubSubPipeline', () => {
+  it('should publish to pipeline', () => {
+    const pubSub = new RedisPubSub(mockOptions);
+    const pipeline = pubSub.pipeline();
+
+    pipeline.publish('TOPIC', 'test');
+    expect(pipelinePublishSpy.lastCall.args).to.have.members([
+      'TOPIC',
+      '"test"',
+    ]);
+  });
+
+  it('should be chainable', () => {
+    const pubSub = new RedisPubSub(mockOptions);
+    const pipeline = pubSub.pipeline();
+
+    const result = pipeline.publish('TOPIC', { hello: 'world' });
+    expect(result).to.be.an.instanceOf(RedisPubSubPipeline);
+  });
+
+  it('should use the serializer to transform the payload before publishing', () => {
+    const serializer = stub();
+    const serializedPayload = `{ 'hello': 'custom' }`;
+    serializer.returnWith(serializedPayload);
+
+    const pipeline = new RedisPubSubPipeline({
+      publisher: mockRedisClient as any,
+      serializer,
+    });
+    pipeline.publish('TOPIC', { hello: 'world' });
+
+    expect(serializer.callCount).to.equal(1);
+    expect(pipelinePublishSpy.lastCall.args).to.have.members([
+      'TOPIC',
+      serializedPayload,
+    ]);
+  });
+
+  it('should execute the pipeline', async () => {
+    const pubSub = new RedisPubSub(mockOptions);
+    const pipeline = pubSub.pipeline();
+    await pipeline.exec();
+    expect(pipelineExecSpy.callCount).to.equal(1);
+  });
 });

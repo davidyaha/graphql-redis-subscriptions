@@ -62,7 +62,8 @@
     "typescript": "^5.7.2"
   },
   "optionalDependencies": {
-    "ioredis": "^5.3.2"
+    "ioredis": "^5.3.2",
+    "redis": "^5.8.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

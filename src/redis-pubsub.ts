@@ -1,13 +1,25 @@
 import {Cluster, Redis, RedisOptions} from 'ioredis';
+import { RedisClusterType, RedisClientType, RedisClientOptions, RedisClusterOptions } from 'redis';
 import {PubSubEngine} from 'graphql-subscriptions';
 import {PubSubAsyncIterator} from './pubsub-async-iterator';
 
-type RedisClient = Redis | Cluster;
+type RedisClient = Redis | Cluster | RedisClientType | RedisClusterType;
 type OnMessage<T> = (message: T) => void;
 type DeserializerContext = { channel: string, pattern?: string };
 
-export interface PubSubRedisOptions {
-  connection?: RedisOptions | string;
+type OptionsType<R extends RedisClient>
+  = R extends Redis
+    ? RedisOptions | string
+    : R extends Cluster
+      ? RedisOptions | string
+      : R extends RedisClientType
+        ? RedisClientOptions
+        : R extends RedisClusterType
+          ? RedisClusterOptions
+          : never
+
+export interface PubSubRedisOptions<RC extends RedisClient> {
+  connection?: OptionsType<RC>;
   triggerTransform?: TriggerTransform;
   connectionListener?: (err: Error) => void;
   publisher?: RedisClient;
@@ -19,9 +31,9 @@ export interface PubSubRedisOptions {
   pmessageEventName?: string;
 }
 
-export class RedisPubSub implements PubSubEngine {
+export class RedisPubSub<RC extends RedisClient> implements PubSubEngine {
 
-  constructor(options: PubSubRedisOptions = {}) {
+  constructor(options: PubSubRedisOptions<RC> = {}) {
     const {
       triggerTransform,
       connection,
@@ -127,7 +139,8 @@ export class RedisPubSub implements PubSubEngine {
       subsPendingRefsMap.set(triggerName, { refs: [], pending });
 
       const sub = new Promise<number>((resolve, reject) => {
-        const subscribeFn = options['pattern'] ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
+        const psubfn = 'psubscribe' in this.redisSubscriber ? this.redisSubscriber.psubscribe : this.redisSubscriber.pSubscribe
+        const subscribeFn = options['pattern'] ? psubfn : this.redisSubscriber.subscribe;
 
         subscribeFn.call(this.redisSubscriber, triggerName, err => {
           if (err) {
@@ -159,7 +172,8 @@ export class RedisPubSub implements PubSubEngine {
     if (refs.size === 1) {
       // unsubscribe from specific channel and pattern match
       this.redisSubscriber.unsubscribe(triggerName);
-      this.redisSubscriber.punsubscribe(triggerName);
+      const punsubfn = 'punsubscribe' in this.redisSubscriber ? this.redisSubscriber.punsubscribe : this.redisSubscriber.pUnsubscribe
+      punsubfn.call(this.redisSubscriber, triggerName);
 
       this.subsRefsMap.delete(triggerName);
     } else {
@@ -185,10 +199,12 @@ export class RedisPubSub implements PubSubEngine {
   }
 
   public close(): Promise<'OK'[]> {
+    const pubQuit = 'close' in this.redisPublisher ? this.redisPublisher.close : this.redisPublisher.quit
+    const subQuit = 'close' in this.redisSubscriber ? this.redisSubscriber.close : this.redisSubscriber.quit
     return Promise.all([
-      this.redisPublisher.quit(),
-      this.redisSubscriber.quit(),
-    ]);
+      pubQuit.call(this.redisPublisher),
+      subQuit.call(this.redisSubscriber),
+    ]).then(OkOrVoids => OkOrVoids.map(ok => ok || 'OK' as const));
   }
 
   private readonly serializer?: Serializer;

@@ -1,10 +1,30 @@
 import {Cluster, Redis, RedisOptions} from 'ioredis';
+import type {RedisClientType, RedisClusterType} from 'redis';
 import {PubSubEngine} from 'graphql-subscriptions';
 import {PubSubAsyncIterator} from './pubsub-async-iterator';
 
-type RedisClient = Redis | Cluster;
+type IORedisClient = Redis | Cluster;
+type NodeRedisClient = RedisClientType | RedisClusterType;
+type RedisClient = IORedisClient | NodeRedisClient;
 type OnMessage<T> = (message: T) => void;
 type DeserializerContext = { channel: string, pattern?: string };
+
+// ioredis and node-redis expose incompatible pub/sub APIs: ioredis uses lower-case
+// method names with error-first callbacks and emits generic 'message'/'pmessage'
+// events, while node-redis uses camelCase method names that return a Promise and
+// take the message listener as an argument to subscribe()/pSubscribe() directly.
+function isIORedisClient(client: RedisClient): client is IORedisClient {
+  return typeof (client as IORedisClient).psubscribe === 'function';
+}
+
+// ioredis' quit() resolves 'OK'; node-redis' close() resolves void, so normalize it.
+async function closeClient(client: RedisClient): Promise<'OK'> {
+  if (isIORedisClient(client)) {
+    return client.quit();
+  }
+  await client.close();
+  return 'OK';
+}
 
 export interface PubSubRedisOptions {
   connection?: RedisOptions | string;
@@ -73,10 +93,15 @@ export class RedisPubSub implements PubSubEngine {
       }
     }
 
-    // handle messages received via psubscribe and subscribe
-    this.redisSubscriber.on(pmessageEventName, this.onMessage.bind(this));
-    // partially applied function passes undefined for pattern arg since 'message' event won't provide it:
-    this.redisSubscriber.on(messageEventName, this.onMessage.bind(this, undefined));
+    // ioredis delivers messages via generic events; node-redis has no equivalent
+    // and instead delivers them to the listener passed to subscribe()/pSubscribe(),
+    // which is wired up per-trigger in subscribe() below.
+    if (isIORedisClient(this.redisSubscriber)) {
+      // handle messages received via psubscribe and subscribe
+      this.redisSubscriber.on(pmessageEventName, this.onMessage.bind(this));
+      // partially applied function passes undefined for pattern arg since 'message' event won't provide it:
+      this.redisSubscriber.on(messageEventName, this.onMessage.bind(this, undefined));
+    }
 
     this.subscriptionMap = {};
     this.subsRefsMap = new Map<string, Set<number>>();
@@ -126,24 +151,50 @@ export class RedisPubSub implements PubSubEngine {
       const subsPendingRefsMap = this.subsPendingRefsMap
       subsPendingRefsMap.set(triggerName, { refs: [], pending });
 
-      const sub = new Promise<number>((resolve, reject) => {
-        const subscribeFn = options['pattern'] ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
+      // Add ids of subscribe calls initiated when waiting for the remote call response
+      const resolveSubscription = (): number => {
+        const pendingRefs = subsPendingRefsMap.get(triggerName)
+        pendingRefs.refs.forEach((refId) => refs.add(refId))
+        subsPendingRefsMap.delete(triggerName)
 
-        subscribeFn.call(this.redisSubscriber, triggerName, err => {
-          if (err) {
-            subsPendingRefsMap.delete(triggerName)
-            reject(err);
-          } else {
-            // Add ids of subscribe calls initiated when waiting for the remote call response
-            const pendingRefs = subsPendingRefsMap.get(triggerName)
-            pendingRefs.refs.forEach((id) => refs.add(id))
-            subsPendingRefsMap.delete(triggerName)
+        refs.add(id);
+        return id;
+      };
 
-            refs.add(id);
-            resolve(id);
-          }
+      const isPattern = Boolean(options['pattern']);
+      let sub: Promise<number>;
+
+      if (isIORedisClient(this.redisSubscriber)) {
+        const subscribeFn = isPattern ? this.redisSubscriber.psubscribe : this.redisSubscriber.subscribe;
+        sub = new Promise<number>((resolve, reject) => {
+          subscribeFn.call(this.redisSubscriber, triggerName, err => {
+            if (err) {
+              subsPendingRefsMap.delete(triggerName)
+              reject(err);
+            } else {
+              // Resolve synchronously within the callback (rather than via a .then()
+              // continuation) so refs.add(id) happens before subscribe() returns -
+              // some clients invoke this callback synchronously, and callers may
+              // publish right after calling subscribe() in the same tick.
+              resolve(resolveSubscription());
+            }
+          });
         });
-      });
+      } else {
+        // node-redis has no generic 'message'/'pmessage' events: the listener passed
+        // here is what actually receives messages for this trigger, and subscribe()/
+        // pSubscribe() resolve their own Promise once the subscription is confirmed.
+        const subscribeFn = isPattern ? this.redisSubscriber.pSubscribe : this.redisSubscriber.subscribe;
+        const listener = isPattern
+          ? (message: string, channel: string) => this.onMessage(triggerName, channel, message)
+          : (message: string) => this.onMessage(undefined, triggerName, message);
+        sub = subscribeFn.call(this.redisSubscriber, triggerName, listener)
+          .then(resolveSubscription, (err: Error) => {
+            subsPendingRefsMap.delete(triggerName)
+            throw err;
+          });
+      }
+
       // Ensure waiting subscribe will complete
       sub.then(pending.resolve).catch(pending.reject)
       return sub;
@@ -158,8 +209,15 @@ export class RedisPubSub implements PubSubEngine {
 
     if (refs.size === 1) {
       // unsubscribe from specific channel and pattern match
-      this.redisSubscriber.unsubscribe(triggerName);
-      this.redisSubscriber.punsubscribe(triggerName);
+      if (isIORedisClient(this.redisSubscriber)) {
+        this.redisSubscriber.unsubscribe(triggerName);
+        this.redisSubscriber.punsubscribe(triggerName);
+      } else {
+        // node-redis's unsubscribe()/pUnsubscribe() return real Promises; catch to
+        // avoid unhandled rejections since this call is intentionally fire-and-forget.
+        this.redisSubscriber.unsubscribe(triggerName).catch(() => undefined);
+        this.redisSubscriber.pUnsubscribe(triggerName).catch(() => undefined);
+      }
 
       this.subsRefsMap.delete(triggerName);
     } else {
@@ -186,8 +244,8 @@ export class RedisPubSub implements PubSubEngine {
 
   public close(): Promise<'OK'[]> {
     return Promise.all([
-      this.redisPublisher.quit(),
-      this.redisSubscriber.quit(),
+      closeClient(this.redisPublisher),
+      closeClient(this.redisSubscriber),
     ]);
   }
 

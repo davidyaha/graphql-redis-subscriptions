@@ -1,11 +1,14 @@
 {
-  "name": "graphql-redis-subscriptions",
-  "version": "2.7.0",
-  "description": "A graphql-subscriptions PubSub Engine using redis",
+  "name": "apollo-redis-subscriptions",
+  "version": "2.7.2",
+  "description": "A graphql-subscriptions PubSub Engine using redis (maintained fork of graphql-redis-subscriptions)",
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/davidyaha/graphql-redis-subscriptions.git"
+    "url": "https://github.com/rafagsiqueira/apollo-redis-subscriptions.git"
   },
   "keywords": [
     "graphql",
@@ -13,8 +16,12 @@
     "apollo",
     "subscriptions"
   ],
-  "author": "David Yahalomi",
+  "author": "Rafael Guimarães Siqueira",
   "contributors": [
+    {
+      "name": "David Yahalomi",
+      "url": "https://github.com/davidyaha"
+    },
     {
       "name": "Michał Lytek",
       "url": "https://github.com/19majkel94"
@@ -22,9 +29,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/davidyaha/graphql-redis-subscriptions/issues"
+    "url": "https://github.com/rafagsiqueira/apollo-redis-subscriptions/issues"
   },
-  "homepage": "https://github.com/davidyaha/graphql-redis-subscriptions",
+  "homepage": "https://github.com/rafagsiqueira/apollo-redis-subscriptions",
   "scripts": {
     "compile": "tsc",
     "test": "npm run coverage && npm run lint",
@@ -57,12 +64,14 @@
     "ioredis": "^5.3.2",
     "mocha": "^10.0.0",
     "nyc": "^17.1.0",
+    "redis": "^5.8.2",
     "simple-mock": "^0.8.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.7.2"
   },
   "optionalDependencies": {
-    "ioredis": "^5.3.2"
+    "ioredis": "^5.3.2",
+    "redis": "^5.8.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

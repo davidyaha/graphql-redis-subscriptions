@@ -4,13 +4,25 @@ on:
   release:
     types: [published]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build-and-publish:
+  publish:
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: read
-      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+      # Node 24 bundles an npm new enough for trusted publishing (OIDC >= 11.5.1).
+      # Self-updating npm with `npm i -g npm@latest` breaks provenance
+      # (Cannot find module 'sigstore'), so rely on the bundled npm.
+      - run: npm ci
+      - run: npm run compile
+      - run: npm publish --provenance --access public
     
     services:
       redis:
@@ -26,26 +38,3 @@ jobs:
           - 7003:7003
           - 7004:7004
           - 7005:7005
-    
-    strategy:
-      matrix:
-        node-version: [lts/*]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Publish to npm
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

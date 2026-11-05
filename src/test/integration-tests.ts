@@ -6,7 +6,8 @@ import { subscribe } from 'graphql/subscription';
 
 import { RedisPubSub } from '../redis-pubsub';
 import { withFilter } from '../with-filter';
-import { Cluster } from 'ioredis';
+import { Cluster, Redis } from 'ioredis';
+import { createClient, createCluster, RedisClientType, RedisClusterType } from 'redis';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -69,9 +70,13 @@ describe('PubSubAsyncIterator', function() {
   const returnSpy = mock(origIterator, 'return');
   const schema = buildSchema(origIterator, origPatternIterator);
 
-  before(() => {
+  before(async () => {
+    // Wait for the subscriber connection to finish ioredis's readyCheck before any
+    // SUBSCRIBE is issued, otherwise the first subscribe can race the readyCheck's
+    // INFO command and fail with "Connection in subscriber mode".
+    await (pubsub.getSubscriber() as Redis).ping();
     // Warm the redis connection so that tests would pass
-    pubsub.publish('WARM_UP', {});
+    await pubsub.publish('WARM_UP', {});
   });
 
   after(() => {
@@ -172,4 +177,93 @@ describe('PubSubCluster', () => {
             expect(data).to.contains({ fired: true, from: 'cluster' });
         });
     }).timeout(2000);
+});
+
+describe('PubSubAsyncIterator with node-redis client', function() {
+  const NODE_REDIS_FIRST_EVENT = 'NODE_REDIS_FIRST_EVENT';
+  const NODE_REDIS_SECOND_EVENT = 'NODE_REDIS_SECOND_EVENT';
+
+  const query = parse(`
+    subscription S1 {
+      testSubscription
+    }
+  `);
+
+  const patternQuery = parse(`
+    subscription S1 {
+      testPatternSubscription
+    }
+  `);
+
+  const publisher: RedisClientType = createClient({ socket: { port: 6379 } });
+  const subscriber: RedisClientType = createClient({ socket: { port: 6379 } });
+  let pubsub: RedisPubSub;
+  let schema: GraphQLSchema;
+
+  before(async () => {
+    await Promise.all([publisher.connect(), subscriber.connect()]);
+
+    pubsub = new RedisPubSub({ publisher, subscriber });
+    const origIterator = pubsub.asyncIterableIterator(NODE_REDIS_FIRST_EVENT);
+    const origPatternIterator = pubsub.asyncIterableIterator('NODE_REDIS_SECOND*', { pattern: true });
+    schema = buildSchema(origIterator, origPatternIterator);
+  });
+
+  after(() => pubsub.close());
+
+  it('should allow subscriptions', () =>
+    subscribe({ schema, document: query })
+      .then(ai => {
+        const r = (ai as AsyncIterator<any>).next();
+        setTimeout(() => pubsub.publish(NODE_REDIS_FIRST_EVENT, {}), 50);
+
+        return r;
+      })
+      .then(res => {
+        expect(res.value.data.testSubscription).to.equal('FIRST_EVENT');
+      }));
+
+  it('should allow pattern subscriptions', () =>
+    subscribe({ schema, document: patternQuery })
+      .then(ai => {
+        const r = (ai as AsyncIterator<any>).next();
+        setTimeout(() => pubsub.publish(NODE_REDIS_SECOND_EVENT, {}), 50);
+
+        return r;
+      })
+      .then(res => {
+        expect(res.value.data.testPatternSubscription).to.equal('SECOND_EVENT');
+      }));
+});
+
+describe('PubSubCluster with node-redis', () => {
+  const rootNodes = [7001, 7002, 7003, 7004, 7005, 7006].map(port => ({ url: `redis://127.0.0.1:${port}` }));
+  const cluster: RedisClusterType = createCluster({ rootNodes });
+  const eventKey = 'clusterEvtKeyNodeRedis';
+  let pubsub: RedisPubSub;
+
+  before(async () => {
+    await cluster.connect();
+    pubsub = new RedisPubSub({
+      publisher: cluster,
+      subscriber: cluster,
+    });
+
+    await cluster.set('toto', 'aaa');
+    setTimeout(() => {
+      pubsub.publish(eventKey, { fired: true, from: 'cluster' });
+    }, 500);
+  });
+
+  after(() => pubsub.close());
+
+  it('Cluster should work', async () => {
+    expect(await cluster.get('toto')).to.eq('aaa');
+  });
+
+  it('Cluster subscribe', () => {
+    pubsub.subscribe<{ fire: boolean, from: string }>(eventKey, (data) => {
+      expect(data).to.contains({ fired: true, from: 'cluster' });
+    });
+  }).timeout(2000);
 });

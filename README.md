@@ -1,15 +1,15 @@
-# graphql-redis-subscriptions
+# apollo-redis-subscriptions
 
-[![Build Status](https://travis-ci.org/davidyaha/graphql-redis-subscriptions.svg?branch=master)](https://travis-ci.org/davidyaha/graphql-redis-subscriptions)
+> A maintained fork of [`graphql-redis-subscriptions`](https://github.com/davidyaha/graphql-redis-subscriptions). The original project appears to be unmaintained; this fork keeps dependencies current and continues bug fixes. The API is unchanged — the only difference is the package name.
 
 This package implements the PubSubEngine Interface from the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package and also the new AsyncIterator interface. 
 It allows you to connect your subscriptions manager to a Redis Pub Sub mechanism to support 
 multiple subscription manager instances.
 
 ## Installation
-At first, install the `graphql-redis-subscriptions` package: 
+At first, install the `apollo-redis-subscriptions` package: 
 ```
-npm install graphql-redis-subscriptions
+npm install apollo-redis-subscriptions
 ```
 
 As the [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) package is declared as a peer dependency, you might receive warning about an unmet peer dependency if it's not installed already by one of your other packages. In that case you also need to install it too:
@@ -40,7 +40,7 @@ type Result {
 Now, let's create a simple `RedisPubSub` instance:
 
 ```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { RedisPubSub } from 'apollo-redis-subscriptions';
 const pubsub = new RedisPubSub();
 ```
 
@@ -145,7 +145,7 @@ export interface PubSubRedisOptions {
 The basic usage is great for development and you will be able to connect to a Redis server running on your system seamlessly. For production usage, it is recommended to pass a redis client (like ioredis) to the RedisPubSub constructor. This way you can control all the options of your redis connection, for example the connection retry strategy.
 
 ```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { RedisPubSub } from 'apollo-redis-subscriptions';
 import * as Redis from 'ioredis';
 
 const options = {
@@ -174,7 +174,7 @@ Some Redis use cases require receiving binary-safe data back from redis (in a Bu
 | node-redis | `message` | `message_buffer` | `pmessage` | `pmessage_buffer` |
 
 ```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { RedisPubSub } from 'apollo-redis-subscriptions';
 import * as Redis from 'ioredis';
 
 const pubsub = new RedisPubSub({
@@ -189,7 +189,7 @@ const pubsub = new RedisPubSub({
 **Also works with your Redis Cluster**
 
 ```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { RedisPubSub } from 'apollo-redis-subscriptions';
 import { Cluster } from 'ioredis';
 
 const cluster = new Cluster(REDIS_NODES); // like: [{host: 'ipOrHost', port: 1234}, ...]
@@ -211,7 +211,7 @@ You may pass your own serializer and/or deserializer function(s) as part of the 
 The `deserializer` will be called with an extra context object containing `pattern` (if available) and `channel` properties, allowing you to access this information when subscribing to a pattern.
 
 ```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { RedisPubSub } from 'apollo-redis-subscriptions';
 import { someSerializer, someDeserializer } from 'some-serializer-library';
 
 const serialize = (source) => {
@@ -232,7 +232,7 @@ This means that not all objects - such as Date or Regexp objects - will deserial
 For handling such objects, you may pass your own reviver function to `JSON.parse`, for example to handle Date objects the following reviver can be used:
 
 ```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { RedisPubSub } from 'apollo-redis-subscriptions';
 
 const dateReviver = (key, value) => {
   const isISO8601Z = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/;
@@ -260,7 +260,7 @@ pubSub.subscribe('Test', message => {
 ## Old Usage (Deprecated)
 
 ```javascript
-import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { RedisPubSub } from 'apollo-redis-subscriptions';
 const pubsub = new RedisPubSub();
 const subscriptionManager = new SubscriptionManager({
   schema,
@@ -337,7 +337,7 @@ The GitHub Action will automatically:
 - Build the package
 - Publish to npm with provenance
 
-You can verify the published version on [npm](https://www.npmjs.com/package/graphql-redis-subscriptions).
+You can verify the published version on [npm](https://www.npmjs.com/package/apollo-redis-subscriptions).
 
 ## Tests
 

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  redis-6379:
+    image: redis:7-alpine
+    container_name: redis-6379
+    network_mode: "host"
+    command: redis-server --port 6379 --protected-mode no
+
+  redis-7001:
+    image: redis:7-alpine
+    container_name: redis-7001
+    network_mode: "host"
+    volumes:
+      - ./7001/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  redis-7002:
+    image: redis:7-alpine
+    container_name: redis-7002
+    network_mode: "host"
+    volumes:
+      - ./7002/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  redis-7003:
+    image: redis:7-alpine
+    container_name: redis-7003
+    network_mode: "host"
+    volumes:
+      - ./7003/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  redis-7004:
+    image: redis:7-alpine
+    container_name: redis-7004
+    network_mode: "host"
+    volumes:
+      - ./7004/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  redis-7005:
+    image: redis:7-alpine
+    container_name: redis-7005
+    network_mode: "host"
+    volumes:
+      - ./7005/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  redis-7006:
+    image: redis:7-alpine
+    container_name: redis-7006
+    network_mode: "host"
+    volumes:
+      - ./7006/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf

@@ -1,8 +1,7 @@
 import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import { mock } from 'simple-mock';
-import { parse, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLFieldResolver } from 'graphql';
-import { subscribe } from 'graphql/subscription';
+import { subscribe, parse, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLFieldResolver } from 'graphql';
 
 import { RedisPubSub } from '../redis-pubsub';
 import { withFilter } from '../with-filter';
@@ -78,49 +77,41 @@ describe('PubSubAsyncIterator', function() {
     pubsub.close();
   });
 
-  it('should allow subscriptions', () =>
-    subscribe({ schema, document: query})
-      .then(ai => {
-        // tslint:disable-next-line:no-unused-expression
-				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
+  it('should allow subscriptions', async () => {
+    const ai = await subscribe({ schema, document: query});
 
-        const r = (ai as AsyncIterator<any>).next();
-        setTimeout(() => pubsub.publish(FIRST_EVENT, {}), 50);
+    expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
-        return r;
-      })
-      .then(res => {
-        expect(res.value.data.testSubscription).to.equal('FIRST_EVENT');
-      }));
+    const r = (ai as AsyncIterator<any>).next();
+    setTimeout(() => pubsub.publish(FIRST_EVENT, {}), 50);
 
-  it('should allow pattern subscriptions', () =>
-    subscribe({ schema, document: patternQuery })
-      .then(ai => {
-				// tslint:disable-next-line:no-unused-expression
-				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
+    const res = await r;
+    expect(res.value.data.testSubscription).to.equal('FIRST_EVENT');
+  });
 
-        const r = (ai as AsyncIterator<any>).next();
-        setTimeout(() => pubsub.publish(SECOND_EVENT, {}), 50);
 
-        return r;
-      })
-      .then(res => {
-        expect(res.value.data.testPatternSubscription).to.equal('SECOND_EVENT');
-      }));
+  it('should allow pattern subscriptions', async () => {
+    const ai = await subscribe({ schema, document: patternQuery });
 
-  it('should clear event handlers', () =>
-    subscribe({ schema, document: query})
-      .then(ai => {
-				// tslint:disable-next-line:no-unused-expression
-				expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
+    expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
 
-        pubsub.publish(FIRST_EVENT, {});
+    const r = (ai as AsyncIterator<any>).next();
+    setTimeout(() => pubsub.publish(SECOND_EVENT, {}), 50);
 
-        return (ai as AsyncIterator<any>).return();
-      })
-      .then(res => {
-        expect(returnSpy.callCount).to.be.gte(1);
-      }));
+    const res = await r;
+    expect(res.value.data.testPatternSubscription).to.equal('SECOND_EVENT');
+  });
+
+  it('should clear event handlers', async () => {
+    const ai = await subscribe({ schema, document: query});
+    expect(ai[Symbol.asyncIterator]).not.to.be.undefined;
+
+    pubsub.publish(FIRST_EVENT, {});
+
+    const res = await (ai as AsyncIterator<any>).return();
+
+    expect(returnSpy.callCount).to.be.gte(1);
+  });
 });
 
 describe('Subscribe to buffer', () => {

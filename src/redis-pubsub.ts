@@ -50,7 +50,6 @@ export class RedisPubSub implements PubSubEngine {
       this.redisSubscriber = subscriber;
     } else {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const IORedis = require('ioredis');
         this.redisPublisher = new IORedis(connection);
         this.redisSubscriber = new IORedis(connection);

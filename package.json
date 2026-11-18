@@ -3,6 +3,9 @@
   "version": "2.7.0",
   "description": "A graphql-subscriptions PubSub Engine using redis",
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/davidyaha/graphql-redis-subscriptions.git"
